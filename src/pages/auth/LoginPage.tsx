@@ -114,8 +114,18 @@ export function LoginPage() {
         {/* Avatar + Brand */}
         <div className="flex flex-col items-center gap-3 mb-7">
           <motion.div
-            animate={loginSuccess ? { scale: [1, 1.12, 1], y: [0, -8, 0] } : {}}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            animate={
+              loginSuccess
+                ? { scale: [1, 1.12, 1], y: [0, -8, 0] }
+                : avatarState === "peek"
+                ? { scale: 1.18, y: 18 }
+                : { scale: 1, y: 0 }
+            }
+            transition={
+              loginSuccess
+                ? { duration: 0.6, ease: "easeOut" }
+                : { type: "spring", stiffness: 180, damping: 18 }
+            }
             className="relative"
           >
             <motion.div

@@ -134,23 +134,7 @@ export function InteractiveAvatar({ state, size = 120 }: Props) {
           {state === "success" && <SuccessSparkles />}
         </AnimatePresence>
 
-        {/* ── Peek: eyebrow-raise indicator ── */}
-        <AnimatePresence>
-          {state === "peek" && (
-            <motion.text
-              key="peek-emoji"
-              x="88" y="42"
-              fontSize="14"
-              textAnchor="middle"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={ease}
-            >
-              👀
-            </motion.text>
-          )}
-        </AnimatePresence>
+        {/* peek: no extra elements — expression handled by eyes/brows */}
       </svg>
     </motion.div>
   );
