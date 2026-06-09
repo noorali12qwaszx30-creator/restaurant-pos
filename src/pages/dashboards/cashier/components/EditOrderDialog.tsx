@@ -14,7 +14,6 @@ import { useOrders, type LiveOrder } from "@/contexts/OrderContext";
 import { cn } from "@/lib/utils";
 import type { CartItem } from "../hooks/useCart";
 
-const TAX_RATE = 0.15;
 
 // ─── editable statuses ────────────────────────────────────────
 const EDITABLE_STATUSES: LiveOrder["status"][] = [
@@ -152,8 +151,7 @@ export function EditOrderDialog({ order, onClose }: Props) {
   const zone        = getZoneById(customer.zoneId ?? "");
   const deliveryFee = order.type === "delivery" && zone ? zone.fee : order.deliveryFee;
   const subtotal    = cartItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
-  const tax         = subtotal * TAX_RATE;
-  const total       = subtotal + tax + deliveryFee;
+  const total       = subtotal + deliveryFee;
 
   // ── save ─────────────────────────────────────────
   async function handleSave() {
@@ -164,7 +162,7 @@ export function EditOrderDialog({ order, onClose }: Props) {
         customerName:    customer.name    || undefined,
         customerPhone:   customer.phone   || undefined,
         deliveryAddress: customer.address || undefined,
-        subtotal, deliveryFee, tax, total,
+        subtotal, deliveryFee, tax: 0, total,
         items: cartItems.map(i => ({
           menuItemId: i.menuItemId,
           name:       i.name,
@@ -238,10 +236,6 @@ export function EditOrderDialog({ order, onClose }: Props) {
               <div className="flex justify-between text-sm text-text-secondary">
                 <span>المجموع الفرعي</span>
                 <span>{subtotal.toFixed(1)} د.ع</span>
-              </div>
-              <div className="flex justify-between text-sm text-text-secondary">
-                <span>ضريبة 15%</span>
-                <span>{tax.toFixed(1)} د.ع</span>
               </div>
               {deliveryFee > 0 && (
                 <div className="flex justify-between text-sm text-status-info">

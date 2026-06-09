@@ -5,7 +5,6 @@ import type { PosOrderType } from "./OrderTypeSelector";
 import { getZoneById } from "@/data/mock-zones";
 import { cn } from "@/lib/utils";
 
-const TAX_RATE = 0.15;
 
 interface Props {
   items: CartItem[];
@@ -127,8 +126,7 @@ export function CartPanel({
   const zone = orderType === "delivery" ? getZoneById(zoneId) : undefined;
   const deliveryFee = zone?.fee ?? 0;
   const subtotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
-  const tax = subtotal * TAX_RATE;
-  const total = subtotal + tax + deliveryFee;
+  const total = subtotal + deliveryFee;
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
 
   if (items.length === 0) {
@@ -176,10 +174,6 @@ export function CartPanel({
           <div className="flex justify-between text-sm text-text-secondary">
             <span>المجموع الفرعي</span>
             <span>{subtotal.toFixed(1)} د.ع</span>
-          </div>
-          <div className="flex justify-between text-sm text-text-secondary">
-            <span>ضريبة 15%</span>
-            <span>{tax.toFixed(1)} د.ع</span>
           </div>
           {deliveryFee > 0 && (
             <div className="flex justify-between text-sm text-status-info">

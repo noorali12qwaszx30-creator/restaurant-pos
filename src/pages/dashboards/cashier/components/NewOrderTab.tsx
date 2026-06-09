@@ -16,7 +16,6 @@ import type { CartItem } from "../hooks/useCart";
 
 const LARGE_ORDER_TOTAL = 400;
 const LARGE_ORDER_ITEMS = 15;
-const TAX_RATE = 0.15;
 
 interface CustomerData {
   name: string;
@@ -103,6 +102,7 @@ function InlineCartItem({
 export function NewOrderTab() {
   const cart = useCart();
   const { addOrder } = useOrders();
+
   const { profile } = useAuth();
 
   const [customer, setCustomer] = useState<CustomerData>({ name: "", phone: "", address: "" });
@@ -120,8 +120,7 @@ export function NewOrderTab() {
   const zone = getZoneById(customer.zoneId ?? zoneId);
   const deliveryFee = orderType === "delivery" && zone ? zone.fee : 0;
   const subtotal = cart.items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
-  const tax = subtotal * TAX_RATE;
-  const total = subtotal + tax + deliveryFee;
+  const total = subtotal + deliveryFee;
 
   const PHONE_REQUIRED = 11;
 
@@ -163,7 +162,7 @@ export function NewOrderTab() {
         notes: undefined,
         subtotal,
         deliveryFee,
-        tax,
+        tax: 0,
         total,
         cashierId: profile?.uid,
         driverId: undefined,
@@ -267,10 +266,6 @@ export function NewOrderTab() {
               <div className="flex justify-between text-sm text-text-secondary">
                 <span>المجموع الفرعي</span>
                 <span>{subtotal.toFixed(1)} د.ع</span>
-              </div>
-              <div className="flex justify-between text-sm text-text-secondary">
-                <span>ضريبة 15%</span>
-                <span>{tax.toFixed(1)} د.ع</span>
               </div>
               {deliveryFee > 0 && (
                 <div className="flex justify-between text-sm text-status-info">

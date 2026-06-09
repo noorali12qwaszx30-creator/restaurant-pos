@@ -115,9 +115,11 @@ export function PaymentDialog({ order, onClose, onConfirm }: PaymentDialogProps)
                     <span>{(item.unitPrice * item.quantity).toFixed(1)} د.ع</span>
                   </div>
                 ))}
-                <div className="border-t border-border mt-1.5 pt-1.5 flex justify-between text-xs font-medium text-text-primary">
-                  <span>الضريبة 15%</span><span>{order.tax.toFixed(1)} د.ع</span>
-                </div>
+                {order.deliveryFee > 0 && (
+                  <div className="border-t border-border mt-1.5 pt-1.5 flex justify-between text-xs font-medium text-status-info">
+                    <span>رسوم التوصيل</span><span>{order.deliveryFee.toFixed(1)} د.ع</span>
+                  </div>
+                )}
               </div>
             </>
           )}
