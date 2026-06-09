@@ -3,7 +3,7 @@ import { Search, X, ShoppingCart, CheckCircle2, Trash2, MessageSquare, Plus, Min
 import { useCart } from "../hooks/useCart";
 import { CustomerSection } from "./CustomerSection";
 import { OrderTypeSelector, type PosOrderType } from "./OrderTypeSelector";
-import { DeliveryZoneCombobox } from "./DeliveryZoneCombobox";
+
 import { OrderSourceSelector, type OrderSource } from "./OrderSourceSelector";
 import { CategoryBar } from "./CategoryBar";
 import { ProductGrid } from "./ProductGrid";
@@ -22,6 +22,7 @@ interface CustomerData {
   name: string;
   phone: string;
   address: string;
+  zoneId?: string;
 }
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -116,16 +117,19 @@ export function NewOrderTab() {
 
   const search = useDebounce(searchRaw, 200);
 
-  const zone = getZoneById(zoneId);
+  const zone = getZoneById(customer.zoneId ?? zoneId);
   const deliveryFee = orderType === "delivery" && zone ? zone.fee : 0;
   const subtotal = cart.items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
   const tax = subtotal * TAX_RATE;
   const total = subtotal + tax + deliveryFee;
 
+  const PHONE_REQUIRED = 11;
+
   function validate(): string | null {
     if (cart.items.length === 0) return "أضف صنفاً واحداً على الأقل";
-    if (orderType === "delivery" && !zoneId) return "اختر منطقة التوصيل";
-    if (orderType === "delivery" && !customer.address.trim()) return "أدخل عنوان التوصيل";
+    if (customer.phone.replace(/\D/g, "").length > 0 && customer.phone.replace(/\D/g, "").length < PHONE_REQUIRED)
+      return `رقم الهاتف يجب أن يكون ${PHONE_REQUIRED} أرقام`;
+    if (orderType === "delivery" && !customer.zoneId) return "اختر منطقة التوصيل";
     return null;
   }
 
@@ -155,6 +159,7 @@ export function NewOrderTab() {
         customerName: customer.name || undefined,
         customerPhone: customer.phone || undefined,
         deliveryAddress: customer.address || undefined,
+        zone: customer.zoneId || undefined,
         notes: undefined,
         subtotal,
         deliveryFee,
@@ -173,7 +178,7 @@ export function NewOrderTab() {
       });
       setSuccessId(id);
       cart.clearCart();
-      setCustomer({ name: "", phone: "", address: "" });
+      setCustomer({ name: "", phone: "", address: "", zoneId: undefined });
       setOrderType("delivery");
       setOrderSource("in_store");
       setZoneId("");
@@ -205,12 +210,10 @@ export function NewOrderTab() {
       {/* ══ 1. نوع الطلب ══ */}
       <section className="px-4 pt-4 pb-4 border-b border-border/60 bg-surface">
         <p className="text-[11px] font-bold text-text-muted mb-2.5 uppercase tracking-widest">نوع الطلب</p>
-        <OrderTypeSelector value={orderType} onChange={(v) => { setOrderType(v); if (v !== "delivery") setZoneId(""); }} />
-        {orderType === "delivery" && (
-          <div className="mt-2.5">
-            <DeliveryZoneCombobox value={zoneId} onChange={setZoneId} />
-          </div>
-        )}
+        <OrderTypeSelector value={orderType} onChange={(v) => {
+          setOrderType(v);
+          if (v !== "delivery") setCustomer(prev => ({ ...prev, zoneId: undefined, address: "" }));
+        }} />
       </section>
 
       {/* ══ 2. معلومات الزبون ══ */}
@@ -220,6 +223,7 @@ export function NewOrderTab() {
           value={customer}
           showAddress={orderType === "delivery"}
           onChange={(data) => setCustomer((prev) => ({ ...prev, ...data }))}
+          onZoneFeeChange={() => {}}
         />
         <div className="mt-2.5">
           <OrderSourceSelector value={orderSource} onChange={setOrderSource} />
