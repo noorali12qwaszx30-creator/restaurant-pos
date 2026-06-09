@@ -265,8 +265,15 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       }))
     );
 
-    // Fetch the full order (with items) and add optimistically so
-    // the Realtime INSERT event (which has no nested items) is skipped.
+    // Add optimistically with local items IMMEDIATELY — this ensures
+    // the Realtime INSERT event (which arrives with no items) is
+    // blocked by the duplicate check, and the order is visible at once.
+    const nowOpt = new Date();
+    const optimistic: LiveOrder = { ...order, id: created.id, status: "pending", createdAt: nowOpt, updatedAt: nowOpt };
+    setOrders(prev => [optimistic, ...prev.filter(p => p.id !== optimistic.id)]);
+
+    // Then fetch the DB version to get order_number + accurate timestamps.
+    // If DB returns items, upgrade the local record; otherwise keep optimistic items.
     try {
       const full = await getOrder(created.id);
       if (full) {
@@ -287,13 +294,15 @@ export function OrderProvider({ children }: { children: ReactNode }) {
           deliveryAddress: full.delivery_address ?? undefined,
           notes: full.notes ?? undefined,
           cashierId: full.cashier_id ?? undefined,
-          items: (full.items ?? []).map((i: { menu_item_id: string; name: string; quantity: number; unit_price: number; notes?: string | null }) => ({
-            menuItemId: i.menu_item_id,
-            name: i.name,
-            quantity: i.quantity,
-            unitPrice: Number(i.unit_price),
-            notes: i.notes ?? undefined,
-          })),
+          items: (full.items ?? []).length > 0
+            ? (full.items as { menu_item_id: string; name: string; quantity: number; unit_price: number; notes?: string | null }[]).map(i => ({
+                menuItemId: i.menu_item_id,
+                name: i.name,
+                quantity: i.quantity,
+                unitPrice: Number(i.unit_price),
+                notes: i.notes ?? undefined,
+              }))
+            : order.items, // fallback: use locally-known items if DB returned empty
           createdAt: new Date(full.created_at),
           updatedAt: now,
         };
