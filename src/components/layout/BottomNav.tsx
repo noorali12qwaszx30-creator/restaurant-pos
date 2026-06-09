@@ -75,36 +75,19 @@ interface BottomNavProps {
 
 export function BottomNav({ role }: BottomNavProps) {
   const items = NAV_ITEMS[role];
-  const isAdmin = role === "admin";
 
   return (
     <nav
-      className={cn(
-        "fixed bottom-0 inset-x-0 z-50",
-        "glass border-t border-white/30 shadow-dialog",
-        isAdmin
-          ? "flex items-center justify-around px-1 pb-safe h-[var(--nav-height)]"
-          : "flex items-center justify-center pb-safe h-[var(--nav-height)]"
-      )}
+      className="fixed bottom-0 inset-x-0 z-50 glass border-t border-white/30 shadow-dialog pb-safe"
+      style={{ height: "var(--nav-height)" }}
     >
-      <div className={cn(
-        "flex items-center gap-1",
-        !isAdmin && "bg-white/70 dark:bg-surface/80 backdrop-blur-xl rounded-2xl border border-border/40 shadow-elevated px-2 py-1.5 mx-4"
-      )}>
+      <div className="flex items-center justify-around w-full h-full px-1">
         {items.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
             end
-            className={({ isActive }) =>
-              cn(
-                "relative flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl transition-all duration-200",
-                isAdmin ? "flex-1 px-1" : "px-3.5",
-                isActive
-                  ? "text-primary"
-                  : "text-text-muted hover:text-text-secondary"
-              )
-            }
+            className="relative flex-1 flex flex-col items-center justify-center gap-0.5 h-full py-1.5 transition-all duration-200"
           >
             {({ isActive }) => (
               <>
@@ -116,7 +99,7 @@ export function BottomNav({ role }: BottomNavProps) {
                       : "text-text-muted"
                   )}
                 >
-                  <Icon className="w-4.5 h-4.5" strokeWidth={isActive ? 2.5 : 1.8} />
+                  <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.5 : 1.8} />
                 </div>
                 <span className={cn(
                   "text-[9px] font-semibold leading-none transition-all duration-200",
