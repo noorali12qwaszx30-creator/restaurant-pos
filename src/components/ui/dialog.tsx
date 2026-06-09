@@ -14,21 +14,21 @@ function Dialog({ open, onOpenChange, children }: DialogProps) {
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
           <motion.div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/55 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.18 }}
             onClick={() => onOpenChange(false)}
           />
           <motion.div
-            className="relative z-10 w-full sm:max-w-lg"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+            className="relative z-10 w-full max-w-md"
+            initial={{ opacity: 0, scale: 0.94, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 4 }}
+            transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             {children}
           </motion.div>
@@ -41,14 +41,10 @@ function Dialog({ open, onOpenChange, children }: DialogProps) {
 function DialogContent({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={cn(
-      "bg-surface rounded-t-3xl sm:rounded-2xl shadow-dialog border border-border/50",
-      "max-h-[92dvh] overflow-y-auto",
+      "bg-surface rounded-2xl shadow-dialog border border-border/50",
+      "max-h-[88dvh] overflow-y-auto",
       className
     )}>
-      {/* drag pill */}
-      <div className="sm:hidden flex justify-center pt-3 pb-1">
-        <div className="w-10 h-1 rounded-full bg-border" />
-      </div>
       {children}
     </div>
   );
@@ -56,7 +52,7 @@ function DialogContent({ children, className }: { children: React.ReactNode; cla
 
 function DialogHeader({ children, onClose }: { children: React.ReactNode; onClose?: () => void }) {
   return (
-    <div className="flex items-center justify-between px-5 py-4 border-b border-border sticky top-0 bg-surface/95 backdrop-blur-sm z-10 rounded-t-3xl sm:rounded-t-2xl">
+    <div className="flex items-center justify-between px-5 py-4 border-b border-border sticky top-0 bg-surface/95 backdrop-blur-sm z-10 rounded-t-2xl">
       <div className="flex-1">{children}</div>
       {onClose && (
         <button
