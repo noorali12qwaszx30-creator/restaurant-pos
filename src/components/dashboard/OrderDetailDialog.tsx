@@ -30,13 +30,18 @@ export function OrderDetailDialog({ order, onClose, extraActions }: OrderDetailD
     <Dialog open={!!order} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader onClose={onClose}>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-primary/10 text-primary text-sm font-bold num">
-              {order.orderNumber ?? order.id.slice(0, 4)}
-            </span>
-            <DialogTitle>طلب #{order.orderNumber ?? order.id.slice(0, 6)}</DialogTitle>
-            <StatusBadge status={order.status} />
-            <OrderTypeBadge type={order.type} />
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-primary/10 text-primary text-sm font-bold num">
+                {order.orderNumber ?? order.id.slice(0, 4)}
+              </span>
+              <DialogTitle>طلب #{order.orderNumber ?? order.id.slice(0, 6)}</DialogTitle>
+              <StatusBadge status={order.status} />
+              <OrderTypeBadge type={order.type} />
+            </div>
+            {extraActions && (
+              <div className="flex flex-col gap-1.5">{extraActions}</div>
+            )}
           </div>
         </DialogHeader>
 
@@ -116,9 +121,6 @@ export function OrderDetailDialog({ order, onClose, extraActions }: OrderDetailD
             </div>
           </div>
 
-          {extraActions && (
-            <div className="flex flex-col gap-2">{extraActions}</div>
-          )}
         </DialogBody>
       </DialogContent>
     </Dialog>
