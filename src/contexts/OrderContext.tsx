@@ -199,8 +199,11 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     import("@/integrations/supabase/realtime").then(({ subscribeToOrders }) => {
       unsub = subscribeToOrders({
         onInsert: (o) => {
-          const live = dbOrderToLive(o);
-          setOrders(prev => [live, ...prev]);
+          // Skip if already added optimistically (e.g. from addOrder)
+          setOrders(prev => {
+            if (prev.some(p => p.id === o.id)) return prev;
+            return [dbOrderToLive(o), ...prev];
+          });
         },
         onUpdate: (o) => {
           const live = dbOrderToLive(o);
@@ -230,7 +233,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       setOrders(prev => [newOrder, ...prev]);
       return id;
     }
-    const { createOrder } = await import("@/integrations/supabase/queries");
+    const { createOrder, getOrder } = await import("@/integrations/supabase/queries");
     const created = await createOrder(
       {
         type: order.type as never,
@@ -254,6 +257,48 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         notes: i.notes,
       }))
     );
+
+    // Fetch the full order (with items) and add optimistically so
+    // the Realtime INSERT event (which has no nested items) is skipped.
+    try {
+      const full = await getOrder(created.id);
+      if (full) {
+        const now = new Date();
+        const live: LiveOrder = {
+          id: full.id,
+          orderNumber: (full as { order_number?: number }).order_number,
+          type: full.type as LiveOrder["type"],
+          status: full.status as LiveOrder["status"],
+          source: full.source,
+          subtotal: Number(full.subtotal),
+          deliveryFee: Number(full.delivery_fee),
+          tax: Number(full.tax),
+          total: Number(full.total),
+          paymentMethod: full.payment_method ?? undefined,
+          customerName: full.customer_name ?? undefined,
+          customerPhone: full.customer_phone ?? undefined,
+          deliveryAddress: full.delivery_address ?? undefined,
+          notes: full.notes ?? undefined,
+          cashierId: full.cashier_id ?? undefined,
+          items: (full.items ?? []).map((i: { menu_item_id: string; name: string; quantity: number; unit_price: number; notes?: string | null }) => ({
+            menuItemId: i.menu_item_id,
+            name: i.name,
+            quantity: i.quantity,
+            unitPrice: Number(i.unit_price),
+            notes: i.notes ?? undefined,
+          })),
+          createdAt: new Date(full.created_at),
+          updatedAt: now,
+        };
+        setOrders(prev => [live, ...prev.filter(p => p.id !== live.id)]);
+      }
+    } catch {
+      // Fallback: add with items from local state (no DB timestamps)
+      const now = new Date();
+      const fallback: LiveOrder = { ...order, id: created.id, status: "pending", createdAt: now, updatedAt: now };
+      setOrders(prev => [fallback, ...prev.filter(p => p.id !== fallback.id)]);
+    }
+
     return created.id;
   }, []);
 
