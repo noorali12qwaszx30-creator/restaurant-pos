@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Design Tokens — outside @layer so Tailwind JIT never purges them ─── */
+
+:root {
+  /* Primary — Orange #F97316 as HSL */
+  --color-primary: 25 95% 53%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-primary-hover: 25 95% 46%;
+
+  /* Surfaces — Light mode */
+  --color-background: 0 0% 98%;
+  --color-surface: 0 0% 100%;
+  --color-surface-elevated: 0 0% 96%;
+
+  /* Borders — Light mode */
+  --color-border: 220 13% 87%;
+  --color-border-subtle: 220 13% 93%;
+
+  /* Text — Light mode */
+  --color-text-primary: 224 71% 4%;
+  --color-text-secondary: 220 9% 38%;
+  --color-text-muted: 220 9% 55%;
+
+  /* Status */
+  --color-status-success: 142 71% 45%;
+  --color-status-warning: 38 92% 50%;
+  --color-status-error: 0 84% 60%;
+  --color-status-info: 217 91% 60%;
+
+  /* Shape */
+  --radius-lg: 1rem;
+  --radius-md: 0.75rem;
+  --radius-sm: 0.5rem;
+
+  /* Elevation */
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-elevated: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+
+  /* Layout */
+  --header-height: 4rem;
+  --nav-height: 5rem;
+}
+
+.dark {
+  /* Primary stays the same */
+  --color-primary: 25 95% 53%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-primary-hover: 25 95% 60%;
+
+  /* Surfaces — Dark mode */
+  --color-background: 0 0% 7%;
+  --color-surface: 0 0% 11%;
+  --color-surface-elevated: 0 0% 15%;
+
+  /* Borders — Dark mode */
+  --color-border: 215 14% 22%;
+  --color-border-subtle: 215 14% 18%;
+
+  /* Text — Dark mode */
+  --color-text-primary: 213 31% 96%;
+  --color-text-secondary: 215 16% 65%;
+  --color-text-muted: 215 16% 47%;
+
+  /* Status — same in both modes */
+  --color-status-success: 142 71% 45%;
+  --color-status-warning: 38 92% 50%;
+  --color-status-error: 0 84% 60%;
+  --color-status-info: 217 91% 60%;
+
+  /* Elevation — darker */
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+  --shadow-elevated: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+}
+
+/* ─── Base Styles ─── */
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    direction: rtl;
+  }
+
+  body {
+    @apply bg-background text-text-primary font-sans antialiased;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-surface; }
+  ::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-text-muted; }
+}
+
+/* ─── Utility Classes ─── */
+@layer utilities {
+  .page-container {
+    padding-top: var(--header-height);
+    padding-bottom: var(--nav-height);
+    min-height: 100dvh;
+  }
+
+  .glass {
+    @apply bg-surface/80 backdrop-blur-md border border-border/50;
+  }
+
+  .primary-gradient {
+    background: linear-gradient(135deg, hsl(var(--color-primary)) 0%, hsl(25 95% 40%) 100%);
+  }
+}
