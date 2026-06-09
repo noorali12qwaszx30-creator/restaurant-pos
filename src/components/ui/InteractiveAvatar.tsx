@@ -20,7 +20,7 @@ export function InteractiveAvatar({ state, size = 120 }: Props) {
 
   // ── Derived values per state ──────────────────────────────
   // Eye openness  (scaleY of the eyeball ellipse)
-  const eyeOpen   = state === "idle" ? 0.55 : state === "typing" ? 1 : state === "peek" ? 1.15 : 0.7;
+  const eyeOpen   = state === "idle" ? 0 : state === "typing" ? 1 : state === "peek" ? 1.15 : 0.7;
   // Pupil Y (looking "down" when typing toward keyboard)
   const pupilY    = state === "typing" ? 3 : 0;
   // Pupil size
