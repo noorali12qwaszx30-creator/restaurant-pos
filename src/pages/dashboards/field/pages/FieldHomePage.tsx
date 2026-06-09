@@ -1,10 +1,9 @@
 import { useState, useMemo } from "react";
-import { CheckCircle2, ChefHat, Loader2, AlertTriangle, Clock } from "lucide-react";
+import { CheckCircle2, ChefHat, Loader2, Clock } from "lucide-react";
 import { useOrders, type LiveOrder } from "@/contexts/OrderContext";
 import { MOCK_DRIVERS } from "@/data/mock-drivers";
 import { OrderCard } from "@/components/dashboard/OrderCard";
-import { DeliveryPersonSelector } from "../components/DeliveryPersonSelector";
-import { EmptyState } from "@/components/dashboard/EmptyState";
+
 import { cn } from "@/lib/utils";
 
 // ── Move to Ready button ──────────────────────────────────────
@@ -42,23 +41,6 @@ function PreparingCard({ order, onMarkReady }: { order: LiveOrder; onMarkReady: 
   );
 }
 
-// ── Ready Card ────────────────────────────────────────────────
-function ReadyOrderCard({ order, onAssign }: { order: LiveOrder; onAssign: (driverId: string, driverName: string) => void }) {
-  return (
-    <OrderCard
-      order={order}
-      actions={
-        <DeliveryPersonSelector
-          orderId={order.id}
-          currentDriverId={order.driverId}
-          currentDriverName={order.driverName}
-          onAssign={onAssign}
-        />
-      }
-    />
-  );
-}
-
 // ── Dispatched row (brief confirmation) ───────────────────────
 function DispatchedRow({ order }: { order: LiveOrder }) {
   return (
@@ -80,7 +62,7 @@ function DispatchedRow({ order }: { order: LiveOrder }) {
 
 // ══════════════════════════════════════════════════════════════
 export function FieldHomePage() {
-  const { orders, markReady, assignAndDispatch } = useOrders();
+  const { orders, markReady } = useOrders();
 
   // Pending delivery orders — waiting
   const pendingOrders = useMemo(
@@ -187,37 +169,6 @@ export function FieldHomePage() {
           </div>
         </section>
       )}
-
-      {/* ── Ready — needs driver ── */}
-      <section className="px-4 pt-4 border-t border-border">
-        <div className="flex items-center gap-2 mb-3">
-          <AlertTriangle className="w-4 h-4 text-status-warning" />
-          <h2 className="text-sm font-bold text-text-primary">جاهزة · بانتظار سائق</h2>
-          <span className="text-xs font-bold text-status-warning bg-status-warning/10 rounded-full px-2 py-0.5 border border-status-warning/20">
-            {readyOrders.length}
-          </span>
-        </div>
-
-        {readyOrders.length === 0 ? (
-          <div className="mb-4">
-            <EmptyState
-              icon={<CheckCircle2 className="w-8 h-8" />}
-              title="لا توجد طلبات بانتظار سائق"
-              description="جميع الطلبات الجاهزة مُسندة"
-            />
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3 mb-6">
-            {readyOrders.map(o => (
-              <ReadyOrderCard
-                key={o.id}
-                order={o}
-                onAssign={(drvId, drvName) => assignAndDispatch(o.id, drvId, drvName)}
-              />
-            ))}
-          </div>
-        )}
-      </section>
 
       {/* ── Delivering — dispatched today ── */}
       {deliveringOrders.length > 0 && (
