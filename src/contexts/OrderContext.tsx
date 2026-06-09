@@ -159,6 +159,13 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     loadOrders();
   }, [loadOrders]);
 
+  // ── Fallback polling every 30s (in case Realtime misses events) ──
+  useEffect(() => {
+    if (IS_DEV_MODE) return;
+    const id = setInterval(() => loadOrders(), 30_000);
+    return () => clearInterval(id);
+  }, [loadOrders]);
+
   // ── Realtime (production) ──
   useEffect(() => {
     if (IS_DEV_MODE) return;
