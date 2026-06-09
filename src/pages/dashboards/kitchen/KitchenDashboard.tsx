@@ -1,8 +1,8 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   ChefHat, CheckCircle2, AlertTriangle, AlertOctagon,
   Truck, ShoppingBag, UtensilsCrossed,
-  Package, CircleAlert, Timer,
+  Package, CircleAlert, Timer, Siren,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useLateOrderSiren, type AlarmLevel } from "@/hooks/useLateOrderSiren";
@@ -227,10 +227,11 @@ function KitchenOrderCard({ order, alarmLevel, onStartPreparing }: KitchenCardPr
 export function KitchenDashboard() {
   const [tick, setTick] = useState(0);
   const { orders, markPreparing } = useOrders();
+  const alreadyAlarmed = useRef<Set<string>>(new Set());
 
-  /* timer tick every 15s for age display */
+  /* timer tick every second for live timer display */
   useEffect(() => {
-    const id = setInterval(() => setTick(p => p + 1), 15_000);
+    const id = setInterval(() => setTick(p => p + 1), 1_000);
     return () => clearInterval(id);
   }, []);
 
@@ -254,12 +255,42 @@ export function KitchenDashboard() {
   const { getOrderLevel } = useLateOrderSiren({ orders: legacyOrders as never });
   useKitchenVoiceAnnouncer({ orders: legacyOrders as never, enabled: true });
 
+  /* late orders (≥30 min) */
+  const lateOrders = useMemo(
+    () => kitchenOrders.filter(o => Math.floor((Date.now() - o.createdAt.getTime()) / 60000) >= 30),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [kitchenOrders, tick]
+  );
+
+  /* play a beep/alarm sound once per order that crosses 30 min */
+  useEffect(() => {
+    lateOrders.forEach(o => {
+      if (!alreadyAlarmed.current.has(o.id)) {
+        alreadyAlarmed.current.add(o.id);
+        try {
+          const ctx = new AudioContext();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.type = "square";
+          osc.frequency.setValueAtTime(880, ctx.currentTime);
+          osc.frequency.setValueAtTime(440, ctx.currentTime + 0.15);
+          osc.frequency.setValueAtTime(880, ctx.currentTime + 0.3);
+          gain.gain.setValueAtTime(0.4, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.5);
+        } catch { /* ignore if audio blocked */ }
+      }
+    });
+  }, [lateOrders]);
+
   const stats = useMemo(() => ({
     newC:   kitchenOrders.filter(o => o.status === "pending").length,
     prepC:  kitchenOrders.filter(o => o.status === "preparing").length,
     readyC: orders.filter(o => o.status === "ready").length,
-    lateC:  kitchenOrders.filter(o => getOrderLevel(o.createdAt) >= 1).length,
-  }), [kitchenOrders, orders, getOrderLevel]);
+    lateC:  lateOrders.length,
+  }), [kitchenOrders, orders, lateOrders]);
 
   return (
     <DashboardLayout role="kitchen">
@@ -271,6 +302,26 @@ export function KitchenDashboard() {
           readyCount={stats.readyC}
           lateCount={stats.lateC}
         />
+
+        {/* ── Late alert banner ── */}
+        {lateOrders.length > 0 && (
+          <div className="rounded-2xl border-2 border-status-error bg-status-error/10 px-4 py-3 flex items-center gap-3 animate-[latePulse_0.8s_ease-in-out_infinite]">
+            <Siren className="w-6 h-6 text-status-error shrink-0 animate-spin" style={{ animationDuration: "1s" }} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-black text-status-error">⚠️ تأخير حرج!</p>
+              <p className="text-xs text-status-error/80 font-medium">
+                {lateOrders.length} {lateOrders.length === 1 ? "طلب تجاوز" : "طلبات تجاوزت"} 30 دقيقة
+              </p>
+            </div>
+            <div className="flex flex-col items-end gap-0.5">
+              {lateOrders.slice(0, 3).map(o => (
+                <span key={o.id} className="text-[11px] font-bold text-status-error bg-status-error/15 rounded px-2 py-0.5 num">
+                  #{o.orderNumber ?? o.id.slice(0, 4)}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {kitchenOrders.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4 animate-in">

@@ -1,27 +1,70 @@
-import { Clock, MapPin, Phone, ChevronLeft, Store, MessageCircle, Camera, Send } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Clock, MapPin, Phone, ChevronLeft, Store, MessageCircle, Camera, Send, AlertTriangle } from "lucide-react";
 import { StatusBadge, OrderTypeBadge } from "./StatusBadge";
 import type { LiveOrder } from "@/contexts/OrderContext";
 import { cn } from "@/lib/utils";
 
 const SOURCE_CONFIG: Record<string, { label: string; icon: React.ReactNode; cls: string }> = {
-  phone:     { label: "هاتف",     icon: <Phone     className="w-2.5 h-2.5" />, cls: "bg-status-success/10 text-status-success border-status-success/25" },
+  phone:     { label: "هاتف",     icon: <Phone         className="w-2.5 h-2.5" />, cls: "bg-status-success/10 text-status-success border-status-success/25" },
   whatsapp:  { label: "واتساب",   icon: <MessageCircle className="w-2.5 h-2.5" />, cls: "bg-status-success/10 text-status-success border-status-success/25" },
-  instagram: { label: "انستقرام", icon: <Camera    className="w-2.5 h-2.5" />, cls: "bg-[#E1306C]/10 text-[#E1306C] border-[#E1306C]/25" },
-  telegram:  { label: "تلغرام",   icon: <Send      className="w-2.5 h-2.5" />, cls: "bg-status-info/10 text-status-info border-status-info/25" },
-  local:     { label: "المحل",    icon: <Store     className="w-2.5 h-2.5" />, cls: "bg-primary/10 text-primary border-primary/25" },
-  in_store:  { label: "المحل",    icon: <Store     className="w-2.5 h-2.5" />, cls: "bg-primary/10 text-primary border-primary/25" },
+  instagram: { label: "انستقرام", icon: <Camera        className="w-2.5 h-2.5" />, cls: "bg-[#E1306C]/10 text-[#E1306C] border-[#E1306C]/25" },
+  telegram:  { label: "تلغرام",   icon: <Send          className="w-2.5 h-2.5" />, cls: "bg-status-info/10 text-status-info border-status-info/25" },
+  local:     { label: "المحل",    icon: <Store         className="w-2.5 h-2.5" />, cls: "bg-primary/10 text-primary border-primary/25" },
+  in_store:  { label: "المحل",    icon: <Store         className="w-2.5 h-2.5" />, cls: "bg-primary/10 text-primary border-primary/25" },
 };
 
 // ─── Constants ───────────────────────────────────────────────
-const SLOTS = 5; // always render exactly 5 item rows
+const SLOTS = 5;
+const WARN_MIN  = 20; // yellow zone
+const LATE_MIN  = 30; // red zone
 
-interface OrderCardProps {
-  order: LiveOrder;
-  onClick?: () => void;
-  /** Extra content rendered below the items (e.g. action buttons) */
-  actions?: React.ReactNode;
+// ─── Live timer hook (ticks every second) ─────────────────────
+function useElapsed(since: Date) {
+  const [elapsed, setElapsed] = useState(() => Math.floor((Date.now() - since.getTime()) / 1000));
+  useEffect(() => {
+    const id = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - since.getTime()) / 1000));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [since]);
+  return elapsed; // seconds
 }
 
+function formatTimer(secs: number): string {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+// ─── Timer badge ──────────────────────────────────────────────
+function TimerBadge({ since, done }: { since: Date; done: boolean }) {
+  const secs = useElapsed(since);
+  const mins = Math.floor(secs / 60);
+
+  if (done) return null;
+
+  const isLate = mins >= LATE_MIN;
+  const isWarn = mins >= WARN_MIN && !isLate;
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[11px] font-bold num tabular-nums transition-colors duration-500",
+        isLate
+          ? "bg-status-error text-white border-status-error animate-[latePulse_0.8s_ease-in-out_infinite]"
+          : isWarn
+          ? "bg-status-warning/15 text-status-warning border-status-warning/40"
+          : "bg-surface-elevated text-text-muted border-border"
+      )}
+    >
+      <Clock className="w-2.5 h-2.5" />
+      {formatTimer(secs)}
+      {isLate && <AlertTriangle className="w-2.5 h-2.5" />}
+    </span>
+  );
+}
+
+export { formatTimer };
 export function timeAgo(date: Date): string {
   const diff = Math.floor((Date.now() - date.getTime()) / 60000);
   if (diff < 1) return "الآن";
@@ -30,28 +73,32 @@ export function timeAgo(date: Date): string {
 }
 
 const STATUS_BORDER: Record<string, string> = {
-  pending:    "border-r-status-warning",
-  confirmed:  "border-r-status-info",
-  preparing:  "border-r-primary",
-  ready:      "border-r-status-success",
-  delivering: "border-r-status-info",
+  pending:          "border-r-status-warning",
+  confirmed:        "border-r-status-info",
+  preparing:        "border-r-primary",
+  ready:            "border-r-status-success",
+  delivering:       "border-r-status-info",
   out_for_delivery: "border-r-status-info",
-  delivered:  "border-r-status-success/40",
-  cancelled:  "border-r-status-error/40",
+  delivered:        "border-r-status-success/40",
+  cancelled:        "border-r-status-error/40",
 };
+
+interface OrderCardProps {
+  order: LiveOrder;
+  onClick?: () => void;
+  actions?: React.ReactNode;
+}
 
 // ─── Unified Order Card ───────────────────────────────────────
 export function OrderCard({ order, onClick, actions }: OrderCardProps) {
+  const isDone = ["delivered", "cancelled"].includes(order.status);
   const borderColor = STATUS_BORDER[order.status] ?? "border-r-border";
-  const waited      = Math.floor((Date.now() - order.createdAt.getTime()) / 60000);
-  const isUrgent    = waited > 25 && !["delivered", "cancelled"].includes(order.status);
 
   return (
     <div
       className={cn(
         "w-full bg-surface border border-border rounded-2xl overflow-hidden shadow-card",
         "border-r-4", borderColor,
-        isUrgent && "border-r-status-error",
         onClick && "cursor-pointer transition-all duration-150 hover:border-primary/30 hover:shadow-elevated active:scale-[0.99]"
       )}
       onClick={onClick}
@@ -74,13 +121,9 @@ export function OrderCard({ order, onClick, actions }: OrderCardProps) {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1 shrink-0">
-          <Clock className={cn("w-3 h-3", isUrgent ? "text-status-error" : "text-text-muted")} />
-          <span className={cn("text-[11px] num", isUrgent ? "text-status-error font-bold" : "text-text-muted")}>
-            {timeAgo(order.createdAt)}
-          </span>
-          {onClick && <ChevronLeft className="w-3 h-3 text-text-muted opacity-50 ms-0.5" />}
-        </div>
+        {/* live timer */}
+        <TimerBadge since={order.createdAt} done={isDone} />
+        {onClick && <ChevronLeft className="w-3 h-3 text-text-muted opacity-50 shrink-0" />}
       </div>
 
       {/* ── Customer / address bar ── */}
@@ -125,7 +168,6 @@ export function OrderCard({ order, onClick, actions }: OrderCardProps) {
                   </span>
                 </>
               ) : (
-                // empty slot placeholder — invisible but keeps height
                 <span className="w-full h-full" />
               )}
             </div>
@@ -133,7 +175,6 @@ export function OrderCard({ order, onClick, actions }: OrderCardProps) {
         })}
       </div>
 
-      {/* more items badge */}
       {order.items.length > SLOTS && (
         <p className="text-[10px] text-text-muted text-center pb-1.5">
           +{order.items.length - SLOTS} أصناف أخرى
@@ -148,7 +189,6 @@ export function OrderCard({ order, onClick, actions }: OrderCardProps) {
         <span className="text-sm font-bold text-primary num">{order.total.toFixed(1)} د.ع</span>
       </div>
 
-      {/* ── Optional action buttons ── */}
       {actions && (
         <div className="px-3 pb-3 pt-0 flex flex-col gap-2 border-t border-border mt-0">
           {actions}

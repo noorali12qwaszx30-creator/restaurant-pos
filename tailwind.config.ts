@@ -84,6 +84,15 @@ const config: Config = {
         "nav-height": "var(--nav-height)",
         "header-height": "var(--header-height)",
       },
+      keyframes: {
+        latePulse: {
+          "0%, 100%": { opacity: "1",   transform: "scale(1)",    backgroundColor: "hsl(var(--color-status-error))" },
+          "40%":       { opacity: "0.7", transform: "scale(1.07)", backgroundColor: "hsl(var(--color-status-error) / 0.7)" },
+        },
+      },
+      animation: {
+        latePulse: "latePulse 0.8s ease-in-out infinite",
+      },
     },
   },
   plugins: [animate],
