@@ -103,6 +103,7 @@ function mockToLive(o: MockOrder): LiveOrder {
 interface OrderContextValue {
   orders: LiveOrder[];
   isLoading: boolean;
+  loadError: string | null;
 
   // Cashier
   addOrder: (order: Omit<LiveOrder, "id" | "status" | "createdAt" | "updatedAt">) => Promise<string>;
@@ -137,10 +138,12 @@ const OrderContext = createContext<OrderContextValue | null>(null);
 export function OrderProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<LiveOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // ── Load initial data ──
   const loadOrders = useCallback(async () => {
     setIsLoading(true);
+    setLoadError(null);
     if (IS_DEV_MODE) {
       setOrders(MOCK_ORDERS.map(mockToLive));
     } else {
@@ -149,7 +152,9 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         const data = await getOrders();
         setOrders(data.map(mapFullOrder));
       } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
         console.error("[OrderContext] load failed:", err);
+        setLoadError(msg);
       }
     }
     setIsLoading(false);
@@ -368,7 +373,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
   return (
     <OrderContext.Provider value={{
-      orders, isLoading,
+      orders, isLoading, loadError,
       addOrder, editOrder, markPreparing, markReady,
       assignAndDispatch, markDelivered, cancelOrder, reportIssue,
       refetch: loadOrders,
