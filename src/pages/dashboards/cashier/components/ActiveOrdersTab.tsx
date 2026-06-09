@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { Clock, ChevronLeft, Phone, MapPin, List, UtensilsCrossed, ShoppingBag, Bike, CheckCircle2 } from "lucide-react";
+import { Clock, ChevronLeft, Phone, MapPin, List, UtensilsCrossed, ShoppingBag, Bike, CheckCircle2, Pencil, CreditCard } from "lucide-react";
 import { useOrders, type LiveOrder } from "@/contexts/OrderContext";
 import { StatusBadge, OrderTypeBadge } from "@/components/dashboard/StatusBadge";
 import { OrderDetailDialog } from "@/components/dashboard/OrderDetailDialog";
+import { EditOrderDialog, canEdit } from "./EditOrderDialog";
+import { PaymentDialog } from "./PaymentDialog";
 import { EmptyState } from "@/components/dashboard/EmptyState";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const ACTIVE_STATUSES = ["pending", "preparing", "ready", "delivering"] as const;
@@ -106,6 +109,8 @@ function ActiveOrderCard({ order, onClick }: { order: LiveOrder; onClick: () => 
 export function ActiveOrdersTab() {
   const { orders } = useOrders();
   const [selected, setSelected] = useState<LiveOrder | null>(null);
+  const [editing,  setEditing]  = useState<LiveOrder | null>(null);
+  const [paying,   setPaying]   = useState<LiveOrder | null>(null);
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
 
   const activeOrders = orders.filter((o) => (ACTIVE_STATUSES as readonly string[]).includes(o.status));
@@ -182,7 +187,36 @@ export function ActiveOrdersTab() {
         </div>
       )}
 
-      <OrderDetailDialog order={selected} onClose={() => setSelected(null)} />
+      <OrderDetailDialog
+        order={selected}
+        onClose={() => setSelected(null)}
+        extraActions={
+          selected ? (
+            <div className="flex flex-col gap-2">
+              {canEdit(selected) && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => { setEditing(selected); setSelected(null); }}
+                >
+                  <Pencil className="w-4 h-4" /> تعديل الطلب
+                </Button>
+              )}
+              {!["delivered", "cancelled"].includes(selected.status) && (
+                <Button
+                  className="w-full"
+                  onClick={() => { setPaying(selected); setSelected(null); }}
+                >
+                  <CreditCard className="w-4 h-4" /> تسوية الدفع
+                </Button>
+              )}
+            </div>
+          ) : null
+        }
+      />
+
+      <EditOrderDialog order={editing} onClose={() => setEditing(null)} />
+      <PaymentDialog order={paying} onClose={() => setPaying(null)} onConfirm={() => setPaying(null)} />
     </div>
   );
 }
