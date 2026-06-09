@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Search, X, List, UtensilsCrossed, ShoppingBag, Bike } from "lucide-react";
 import { useOrders, type LiveOrder } from "@/contexts/OrderContext";
-import { StatusBadge, OrderTypeBadge } from "@/components/dashboard/StatusBadge";
+import { OrderCard } from "@/components/dashboard/OrderCard";
 import { OrderDetailDialog } from "@/components/dashboard/OrderDetailDialog";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { cn } from "@/lib/utils";
@@ -13,10 +13,6 @@ function normalizeAr(s: string) {
   return s.replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/[ىئ]/g, "ي").toLowerCase().trim();
 }
 
-function timeAgo(d: Date) {
-  const m = Math.floor((Date.now() - d.getTime()) / 60000);
-  return m < 60 ? `${m} د` : `${Math.floor(m / 60)} س`;
-}
 
 const STATUS_FILTERS: { id: StatusFilter; label: string }[] = [
   { id: "all",        label: "كل الحالات" },
@@ -138,44 +134,7 @@ export function SearchReportsTab() {
           <EmptyState icon={<Search className="w-8 h-8" />} title="ابحث عن طلب" description="اكتب رقم الطلب أو اسم الزبون أو الهاتف" />
         ) : (
           results.map((o) => (
-            <button
-              key={o.id}
-              onClick={() => setSelected(o)}
-              className="w-full text-start bg-surface border border-border rounded-2xl p-3 hover:bg-surface-elevated transition-all active:scale-[0.99]"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-primary/10 text-primary text-sm font-bold num shrink-0">
-                    {o.orderNumber ?? o.id.slice(0, 4)}
-                  </span>
-                  <StatusBadge status={o.status} />
-                  <OrderTypeBadge type={o.type} />
-                </div>
-                <div className="shrink-0 text-start flex flex-col items-end gap-0.5">
-                  <span className="text-sm font-bold text-primary">{o.total.toFixed(1)} د.ع</span>
-                  <span className="text-xs text-text-muted">{timeAgo(o.createdAt)}</span>
-                </div>
-              </div>
-              {o.customerName && (
-                <p className="text-xs text-text-muted mb-1.5">{o.customerName} · {o.customerPhone}</p>
-              )}
-              {/* Items rows */}
-              <div className="flex flex-col gap-0.5">
-                {o.items.slice(0, 5).map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between gap-2 py-0.5 border-b border-border/40 last:border-0">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="w-4 h-4 rounded bg-primary/10 text-primary text-[9px] font-bold flex items-center justify-center shrink-0 num">{item.quantity}</span>
-                      <span className="text-xs text-text-secondary truncate">{item.name}</span>
-                    </div>
-                    <span className="text-xs font-semibold text-text-primary num shrink-0">{(item.unitPrice * item.quantity).toFixed(0)} د.ع</span>
-                  </div>
-                ))}
-                {o.items.length > 5 && (
-                  <p className="text-[10px] text-text-muted text-center pt-0.5">+{o.items.length - 5} أصناف أخرى</p>
-                )}
-              </div>
-            </button>
+            <OrderCard key={o.id} order={o} onClick={() => setSelected(o)} />
           ))
         )}
       </div>
