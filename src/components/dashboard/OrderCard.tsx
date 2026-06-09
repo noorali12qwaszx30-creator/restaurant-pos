@@ -1,7 +1,16 @@
-import { Clock, MapPin, Phone, ChevronLeft } from "lucide-react";
+import { Clock, MapPin, Phone, ChevronLeft, Store, MessageCircle, Camera, Send } from "lucide-react";
 import { StatusBadge, OrderTypeBadge } from "./StatusBadge";
 import type { LiveOrder } from "@/contexts/OrderContext";
 import { cn } from "@/lib/utils";
+
+const SOURCE_CONFIG: Record<string, { label: string; icon: React.ReactNode; cls: string }> = {
+  phone:     { label: "هاتف",     icon: <Phone     className="w-2.5 h-2.5" />, cls: "bg-status-success/10 text-status-success border-status-success/25" },
+  whatsapp:  { label: "واتساب",   icon: <MessageCircle className="w-2.5 h-2.5" />, cls: "bg-status-success/10 text-status-success border-status-success/25" },
+  instagram: { label: "انستقرام", icon: <Camera    className="w-2.5 h-2.5" />, cls: "bg-[#E1306C]/10 text-[#E1306C] border-[#E1306C]/25" },
+  telegram:  { label: "تلغرام",   icon: <Send      className="w-2.5 h-2.5" />, cls: "bg-status-info/10 text-status-info border-status-info/25" },
+  local:     { label: "المحل",    icon: <Store     className="w-2.5 h-2.5" />, cls: "bg-primary/10 text-primary border-primary/25" },
+  in_store:  { label: "المحل",    icon: <Store     className="w-2.5 h-2.5" />, cls: "bg-primary/10 text-primary border-primary/25" },
+};
 
 // ─── Constants ───────────────────────────────────────────────
 const SLOTS = 5; // always render exactly 5 item rows
@@ -55,6 +64,15 @@ export function OrderCard({ order, onClick, actions }: OrderCardProps) {
           </span>
           <StatusBadge status={order.status} />
           <OrderTypeBadge type={order.type} />
+          {order.source && SOURCE_CONFIG[order.source] && (
+            <span className={cn(
+              "inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold",
+              SOURCE_CONFIG[order.source].cls
+            )}>
+              {SOURCE_CONFIG[order.source].icon}
+              {SOURCE_CONFIG[order.source].label}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <Clock className={cn("w-3 h-3", isUrgent ? "text-status-error" : "text-text-muted")} />
