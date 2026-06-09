@@ -121,9 +121,10 @@ export function OrderCard({ order, onClick, actions }: OrderCardProps) {
             </span>
           )}
         </div>
-        {/* live timer */}
-        <TimerBadge since={order.createdAt} done={isDone} />
-        {onClick && <ChevronLeft className="w-3 h-3 text-text-muted opacity-50 shrink-0" />}
+        <div className="flex items-center gap-1 shrink-0 -mt-1">
+          <TimerBadge since={order.createdAt} done={isDone} />
+          {onClick && <ChevronLeft className="w-3 h-3 text-text-muted opacity-50" />}
+        </div>
       </div>
 
       {/* ── Customer / address bar ── */}
