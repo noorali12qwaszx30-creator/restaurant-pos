@@ -1,11 +1,26 @@
 import { useState, useMemo } from "react";
-import { CheckCircle2, ChefHat, Loader2, AlertTriangle } from "lucide-react";
+import { CheckCircle2, ChefHat, Loader2, AlertTriangle, Clock } from "lucide-react";
 import { useOrders, type LiveOrder } from "@/contexts/OrderContext";
 import { MOCK_DRIVERS } from "@/data/mock-drivers";
 import { OrderCard } from "@/components/dashboard/OrderCard";
 import { DeliveryPersonSelector } from "../components/DeliveryPersonSelector";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { cn } from "@/lib/utils";
+
+// ── Move to Ready button ──────────────────────────────────────
+function MoveToReadyButton({ onConfirm }: { onConfirm: () => void }) {
+  const [loading, setLoading] = useState(false);
+  async function handle() { setLoading(true); await onConfirm(); setLoading(false); }
+  return (
+    <button
+      onClick={handle}
+      disabled={loading}
+      className="w-full h-11 rounded-xl bg-status-success text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.98] transition-all"
+    >
+      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle2 className="w-4 h-4" /> نقل للجاهز</>}
+    </button>
+  );
+}
 
 // ── Preparing Card ────────────────────────────────────────────
 function PreparingCard({ order, onMarkReady }: { order: LiveOrder; onMarkReady: () => void }) {
@@ -67,6 +82,14 @@ function DispatchedRow({ order }: { order: LiveOrder }) {
 export function FieldHomePage() {
   const { orders, markReady, assignAndDispatch } = useOrders();
 
+  // Pending delivery orders — waiting
+  const pendingOrders = useMemo(
+    () => orders
+      .filter(o => o.status === "pending" && o.type === "delivery")
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
+    [orders]
+  );
+
   // Preparing delivery orders — kitchen is working on them
   const preparingOrders = useMemo(
     () => orders
@@ -93,15 +116,14 @@ export function FieldHomePage() {
   );
 
   const availableDrivers = MOCK_DRIVERS.filter(d => d.status === "available").length;
-  const busyDrivers      = MOCK_DRIVERS.filter(d => d.status === "busy").length;
   const openIssues       = orders.filter(o => o.hasIssue).length;
 
   const KPI = [
-    { label: "تحضير",       value: preparingOrders.length, color: "text-primary",         bg: "bg-primary/8" },
-    { label: "جاهزة",       value: readyOrders.length,     color: "text-status-success",  bg: "bg-status-success/8" },
-    { label: "في الطريق",   value: deliveringOrders.length, color: "text-status-info",    bg: "bg-status-info/8" },
+    { label: "انتظار",      value: pendingOrders.length,    color: "text-status-warning",  bg: "bg-status-warning/8" },
+    { label: "تحضير",       value: preparingOrders.length,  color: "text-primary",         bg: "bg-primary/8" },
+    { label: "جاهزة",       value: readyOrders.length,      color: "text-status-success",  bg: "bg-status-success/8" },
+    { label: "في الطريق",   value: deliveringOrders.length, color: "text-status-info",     bg: "bg-status-info/8" },
     { label: "متاحون",      value: availableDrivers,        color: "text-status-success",  bg: "bg-status-success/8" },
-    { label: "مشغولون",     value: busyDrivers,             color: "text-text-secondary",  bg: "bg-surface-elevated" },
     { label: "مشاكل",       value: openIssues,              color: "text-status-error",    bg: "bg-status-error/8" },
   ];
 
@@ -119,6 +141,30 @@ export function FieldHomePage() {
           ))}
         </div>
       </div>
+
+      {/* ── Pending — waiting orders ── */}
+      {pendingOrders.length > 0 && (
+        <section className="px-4 pt-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Clock className="w-4 h-4 text-status-warning" />
+            <h2 className="text-sm font-bold text-text-primary">انتظار التأكيد</h2>
+            <span className="text-xs font-bold text-status-warning bg-status-warning/10 rounded-full px-2 py-0.5 border border-status-warning/20">
+              {pendingOrders.length}
+            </span>
+          </div>
+          <div className="flex flex-col gap-3 mb-6">
+            {pendingOrders.map(o => (
+              <OrderCard
+                key={o.id}
+                order={o}
+                actions={
+                  <MoveToReadyButton onConfirm={() => markReady(o.id)} />
+                }
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── Preparing — waiting for field to confirm ready ── */}
       {preparingOrders.length > 0 && (
