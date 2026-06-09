@@ -106,6 +106,48 @@ export async function createOrder(
   return newOrder as Order;
 }
 
+/** Edit order — update customer info + replace items (cashier only, pre-delivering) */
+export async function updateOrder(
+  orderId: string,
+  patch: {
+    customer_name?: string;
+    customer_phone?: string;
+    delivery_address?: string;
+    notes?: string;
+    subtotal: number;
+    delivery_fee: number;
+    tax: number;
+    total: number;
+  },
+  items: Array<{
+    menu_item_id: string;
+    name: string;
+    unit_price: number;
+    quantity: number;
+    notes?: string;
+  }>
+): Promise<void> {
+  // Update order row
+  const { error: orderErr } = await (supabase as unknown as AnyRecord)
+    .from("orders")
+    .update(patch)
+    .eq("id", orderId);
+  if (orderErr) throw orderErr;
+
+  // Replace items: delete old → insert new
+  const { error: delErr } = await (supabase as unknown as AnyRecord)
+    .from("order_items")
+    .delete()
+    .eq("order_id", orderId);
+  if (delErr) throw delErr;
+
+  const itemRows = items.map(i => ({ ...i, order_id: orderId }));
+  const { error: insErr } = await (supabase as unknown as AnyRecord)
+    .from("order_items")
+    .insert(itemRows);
+  if (insErr) throw insErr;
+}
+
 /** Update order status — enforces lifecycle rules */
 export async function updateOrderStatus(
   id: string,

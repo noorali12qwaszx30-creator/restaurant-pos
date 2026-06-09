@@ -119,6 +119,9 @@ interface OrderContextValue {
   // Delivery: delivering → delivered
   markDelivered: (orderId: string) => Promise<void>;
 
+  // Cashier: edit order (pre-delivering)
+  editOrder: (orderId: string, patch: Partial<Pick<LiveOrder, "customerName"|"customerPhone"|"deliveryAddress"|"notes"|"subtotal"|"deliveryFee"|"tax"|"total"|"items">>) => Promise<void>;
+
   // Any: → cancelled
   cancelOrder: (orderId: string, reason: string, cancelledBy?: string) => Promise<void>;
 
@@ -336,6 +339,34 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const editOrder = useCallback(async (
+    orderId: string,
+    patch: Partial<Pick<LiveOrder, "customerName"|"customerPhone"|"deliveryAddress"|"notes"|"subtotal"|"deliveryFee"|"tax"|"total"|"items">>
+  ) => {
+    patchLocal(orderId, patch);
+    if (!IS_DEV_MODE) {
+      const { updateOrder } = await import("@/integrations/supabase/queries");
+      const { subtotal = 0, deliveryFee = 0, tax = 0, total = 0, items = [] } = patch;
+      await updateOrder(
+        orderId,
+        {
+          customer_name:    patch.customerName,
+          customer_phone:   patch.customerPhone,
+          delivery_address: patch.deliveryAddress,
+          notes:            patch.notes,
+          subtotal, delivery_fee: deliveryFee, tax, total,
+        },
+        items.map(i => ({
+          menu_item_id: i.menuItemId,
+          name: i.name,
+          unit_price: i.unitPrice,
+          quantity: i.quantity,
+          notes: i.notes,
+        }))
+      );
+    }
+  }, []);
+
   const cancelOrder = useCallback(async (
     orderId: string, reason: string, _cancelledBy?: string
   ) => {
@@ -359,7 +390,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   return (
     <OrderContext.Provider value={{
       orders, isLoading,
-      addOrder, markPreparing, markReady,
+      addOrder, editOrder, markPreparing, markReady,
       assignAndDispatch, markDelivered, cancelOrder, reportIssue,
       refetch: loadOrders,
     }}>
