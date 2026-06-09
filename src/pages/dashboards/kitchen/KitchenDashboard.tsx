@@ -171,24 +171,41 @@ function KitchenOrderCard({ order, alarmLevel, onStartPreparing }: KitchenCardPr
         </div>
       )}
 
-      {/* items list */}
-      <div className="px-2.5 py-2 flex flex-col gap-1.5 flex-1">
-        {order.items.map((item, i) => (
-          <div key={i} className="flex items-center gap-2 bg-surface-elevated rounded-xl px-2.5 py-1.5 border border-border/50">
-            <span className="text-sm font-black text-primary bg-primary/12 rounded-lg px-2 py-0.5 leading-tight shrink-0 num min-w-[28px] text-center">
-              ×{item.quantity}
-            </span>
-            <span className="text-[13px] font-bold text-text-primary leading-tight flex-1 truncate">
-              {item.name}
-            </span>
-            {item.notes && (
-              <span className="text-[9px] text-status-warning shrink-0 truncate max-w-[38%] bg-status-warning/10 rounded px-1">
-                {item.notes}
-              </span>
-            )}
-          </div>
-        ))}
+      {/* items list — fixed 5 slots */}
+      <div className="mx-2.5 my-2 rounded-xl border border-border/60 overflow-hidden">
+        {Array.from({ length: 5 }).map((_, idx) => {
+          const item = order.items[idx];
+          return (
+            <div
+              key={idx}
+              className={cn(
+                "flex items-center gap-2 px-2.5 h-9",
+                idx < 4 && "border-b border-border/40",
+                !item && "opacity-0"
+              )}
+            >
+              {item ? (
+                <>
+                  <span className="text-sm font-black text-primary bg-primary/12 rounded-lg px-1.5 py-0.5 leading-tight shrink-0 num min-w-[26px] text-center">
+                    ×{item.quantity}
+                  </span>
+                  <span className="text-[13px] font-bold text-text-primary leading-tight flex-1 truncate">
+                    {item.name}
+                  </span>
+                  {item.notes && (
+                    <span className="text-[9px] text-status-warning shrink-0 truncate max-w-[38%] bg-status-warning/10 rounded px-1">
+                      {item.notes}
+                    </span>
+                  )}
+                </>
+              ) : <span />}
+            </div>
+          );
+        })}
       </div>
+      {order.items.length > 5 && (
+        <p className="text-[10px] text-text-muted text-center pb-1">+{order.items.length - 5} أصناف أخرى</p>
+      )}
 
       {/* Tap-to-start button */}
       {isNew && onStartPreparing && (

@@ -147,6 +147,29 @@ function ActiveOrderCard({ order, onDeliver, onIssue }: {
           </div>
         )}
 
+        {/* Items — fixed 5 slots */}
+        <div className="rounded-xl border border-border/60 overflow-hidden">
+          {Array.from({ length: 5 }).map((_, idx) => {
+            const item = order.items[idx];
+            return (
+              <div key={idx} className={cn(`flex items-center justify-between gap-2 px-3 h-8${idx < 4 ? " border-b border-border/40" : ""}`, !item && "opacity-0")}>
+                {item ? (
+                  <>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center shrink-0 num">{item.quantity}</span>
+                      <span className="text-xs text-text-secondary truncate">{item.name}</span>
+                    </div>
+                    <span className="text-xs font-semibold text-text-primary num shrink-0">{(item.unitPrice * item.quantity).toFixed(0)} د.ع</span>
+                  </>
+                ) : <span />}
+              </div>
+            );
+          })}
+        </div>
+        {order.items.length > 5 && (
+          <p className="text-[10px] text-text-muted text-center">+{order.items.length - 5} أصناف أخرى</p>
+        )}
+
         {/* Notes */}
         {order.notes && (
           <div className="flex items-start gap-1.5 text-xs text-primary bg-primary/5 border border-primary/15 rounded-xl px-3 py-2">

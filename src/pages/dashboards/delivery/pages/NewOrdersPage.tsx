@@ -80,21 +80,28 @@ function NewOrderCard({ order }: { order: LiveOrder }) {
           </div>
         )}
 
-        {/* Items */}
-        <div className="bg-surface-elevated rounded-xl px-3 py-2 border border-border/50 flex flex-col gap-0.5">
-          {order.items.slice(0, 5).map((item, idx) => (
-            <div key={idx} className="flex items-center justify-between gap-2 py-1 border-b border-border/40 last:border-0">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center shrink-0 num">{item.quantity}</span>
-                <span className="text-xs text-text-secondary truncate">{item.name}</span>
+        {/* Items — fixed 5 slots */}
+        <div className="rounded-xl border border-border/60 overflow-hidden">
+          {Array.from({ length: 5 }).map((_, idx) => {
+            const item = order.items[idx];
+            return (
+              <div key={idx} className={`flex items-center justify-between gap-2 px-3 h-8 ${idx < 4 ? "border-b border-border/40" : ""} ${!item ? "opacity-0" : ""}`}>
+                {item ? (
+                  <>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center shrink-0 num">{item.quantity}</span>
+                      <span className="text-xs text-text-secondary truncate">{item.name}</span>
+                    </div>
+                    <span className="text-xs font-semibold text-text-primary num shrink-0">{(item.unitPrice * item.quantity).toFixed(0)} د.ع</span>
+                  </>
+                ) : <span />}
               </div>
-              <span className="text-xs font-semibold text-text-primary num shrink-0">{(item.unitPrice * item.quantity).toFixed(0)} د.ع</span>
-            </div>
-          ))}
-          {order.items.length > 5 && (
-            <p className="text-[10px] text-text-muted text-center pt-0.5">+{order.items.length - 5} أصناف أخرى</p>
-          )}
+            );
+          })}
         </div>
+        {order.items.length > 5 && (
+          <p className="text-[10px] text-text-muted text-center">+{order.items.length - 5} أصناف أخرى</p>
+        )}
 
         {/* Notes */}
         {order.notes && (

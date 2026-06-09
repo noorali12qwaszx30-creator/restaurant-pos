@@ -3,13 +3,17 @@ import { StatusBadge, OrderTypeBadge } from "./StatusBadge";
 import type { LiveOrder } from "@/contexts/OrderContext";
 import { cn } from "@/lib/utils";
 
+// ─── Constants ───────────────────────────────────────────────
+const SLOTS = 5; // always render exactly 5 item rows
+
 interface OrderCardProps {
   order: LiveOrder;
   onClick?: () => void;
-  compact?: boolean;
+  /** Extra content rendered below the items (e.g. action buttons) */
+  actions?: React.ReactNode;
 }
 
-function timeAgo(date: Date): string {
+export function timeAgo(date: Date): string {
   const diff = Math.floor((Date.now() - date.getTime()) / 60000);
   if (diff < 1) return "الآن";
   if (diff < 60) return `${diff} د`;
@@ -17,90 +21,121 @@ function timeAgo(date: Date): string {
 }
 
 const STATUS_BORDER: Record<string, string> = {
-  pending:   "border-r-status-warning",
-  confirmed: "border-r-status-info",
-  preparing: "border-r-primary",
-  ready:     "border-r-status-success",
-  delivering:"border-r-status-info",
-  delivered: "border-r-status-success/40",
-  cancelled: "border-r-status-error/40",
+  pending:    "border-r-status-warning",
+  confirmed:  "border-r-status-info",
+  preparing:  "border-r-primary",
+  ready:      "border-r-status-success",
+  delivering: "border-r-status-info",
+  out_for_delivery: "border-r-status-info",
+  delivered:  "border-r-status-success/40",
+  cancelled:  "border-r-status-error/40",
 };
 
-export function OrderCard({ order, onClick, compact = false }: OrderCardProps) {
+// ─── Unified Order Card ───────────────────────────────────────
+export function OrderCard({ order, onClick, actions }: OrderCardProps) {
   const borderColor = STATUS_BORDER[order.status] ?? "border-r-border";
+  const waited      = Math.floor((Date.now() - order.createdAt.getTime()) / 60000);
+  const isUrgent    = waited > 25 && !["delivered", "cancelled"].includes(order.status);
 
   return (
-    <button
-      onClick={onClick}
+    <div
       className={cn(
-        "w-full text-start bg-surface border border-border rounded-2xl overflow-hidden",
-        "transition-all duration-200 card-hover shadow-card",
-        "hover:border-primary/20",
+        "w-full bg-surface border border-border rounded-2xl overflow-hidden shadow-card",
         "border-r-4", borderColor,
-        compact ? "p-3" : "p-4"
+        isUrgent && "border-r-status-error",
+        onClick && "cursor-pointer transition-all duration-150 hover:border-primary/30 hover:shadow-elevated active:scale-[0.99]"
       )}
+      onClick={onClick}
     >
-      {/* Header row */}
-      <div className="flex items-start justify-between gap-2 mb-2">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between gap-2 px-3 pt-3 pb-2">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-primary/10 text-primary text-sm font-bold num shrink-0">
             {order.orderNumber ?? order.id.slice(0, 4)}
           </span>
           <StatusBadge status={order.status} />
+          <OrderTypeBadge type={order.type} />
         </div>
-        <div className="flex items-center gap-1 text-text-muted">
-          <Clock className="w-3 h-3" />
-          <span className="text-[11px] num">{timeAgo(order.createdAt)}</span>
-          <ChevronLeft className="w-3 h-3 ms-0.5 opacity-50" />
+        <div className="flex items-center gap-1 shrink-0">
+          <Clock className={cn("w-3 h-3", isUrgent ? "text-status-error" : "text-text-muted")} />
+          <span className={cn("text-[11px] num", isUrgent ? "text-status-error font-bold" : "text-text-muted")}>
+            {timeAgo(order.createdAt)}
+          </span>
+          {onClick && <ChevronLeft className="w-3 h-3 text-text-muted opacity-50 ms-0.5" />}
         </div>
       </div>
 
-      {/* Type + metadata */}
-      <div className="flex items-center gap-2 mb-2 flex-wrap">
-        <OrderTypeBadge type={order.type} />
-        {(order as { tableNumber?: string }).tableNumber && (
-          <span className="text-[11px] text-text-muted flex items-center gap-1 bg-surface-elevated rounded-lg px-2 py-0.5 border border-border">
-            <MapPin className="w-2.5 h-2.5" /> {(order as { tableNumber?: string }).tableNumber}
+      {/* ── Customer / address bar ── */}
+      <div className="flex items-center gap-3 px-3 pb-2 h-7">
+        {order.customerName ? (
+          <span className="text-[11px] text-text-muted flex items-center gap-1 truncate">
+            <Phone className="w-2.5 h-2.5 shrink-0" /> {order.customerName}
+            {order.customerPhone && <span dir="ltr" className="opacity-70"> · {order.customerPhone}</span>}
           </span>
-        )}
-        {order.customerName && (
-          <span className="text-[11px] text-text-muted flex items-center gap-1">
-            <Phone className="w-2.5 h-2.5" /> {order.customerName}
+        ) : order.deliveryAddress ? (
+          <span className="text-[11px] text-text-muted flex items-center gap-1 truncate">
+            <MapPin className="w-2.5 h-2.5 shrink-0" /> {order.deliveryAddress}
           </span>
+        ) : (
+          <span className="text-[11px] text-text-muted opacity-40">—</span>
         )}
       </div>
 
-      {/* Items list — up to 5 rows */}
-      {!compact && order.items.length > 0 && (
-        <div className="mb-2.5 flex flex-col gap-1">
-          {order.items.slice(0, 5).map((item, idx) => (
-            <div key={idx} className="flex items-center justify-between gap-2 py-1 border-b border-border/50 last:border-0">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center shrink-0 num">
-                  {item.quantity}
-                </span>
-                <span className="text-xs text-text-secondary truncate">{item.name}</span>
-              </div>
-              <span className="text-xs font-semibold text-text-primary num shrink-0">
-                {(item.unitPrice * item.quantity).toFixed(0)} د.ع
-              </span>
+      {/* ── Items: exactly SLOTS rows ── */}
+      <div className="mx-3 mb-2 rounded-xl border border-border/60 overflow-hidden">
+        {Array.from({ length: SLOTS }).map((_, idx) => {
+          const item = order.items[idx];
+          return (
+            <div
+              key={idx}
+              className={cn(
+                "flex items-center justify-between gap-2 px-2.5 h-8",
+                idx < SLOTS - 1 && "border-b border-border/40",
+                !item && "opacity-0 pointer-events-none"
+              )}
+            >
+              {item ? (
+                <>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center shrink-0 num">
+                      {item.quantity}
+                    </span>
+                    <span className="text-xs text-text-secondary truncate">{item.name}</span>
+                  </div>
+                  <span className="text-xs font-semibold text-text-primary num shrink-0">
+                    {(item.unitPrice * item.quantity).toFixed(0)} د.ع
+                  </span>
+                </>
+              ) : (
+                // empty slot placeholder — invisible but keeps height
+                <span className="w-full h-full" />
+              )}
             </div>
-          ))}
-          {order.items.length > 5 && (
-            <p className="text-[10px] text-text-muted text-center pt-0.5">
-              +{order.items.length - 5} أصناف أخرى
-            </p>
-          )}
-        </div>
+          );
+        })}
+      </div>
+
+      {/* more items badge */}
+      {order.items.length > SLOTS && (
+        <p className="text-[10px] text-text-muted text-center pb-1.5">
+          +{order.items.length - SLOTS} أصناف أخرى
+        </p>
       )}
 
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-1">
-        <span className="text-[11px] text-text-muted bg-surface-elevated rounded-lg px-2 py-0.5 border border-border">
+      {/* ── Footer ── */}
+      <div className="flex items-center justify-between px-3 pb-3 pt-1">
+        <span className="text-[11px] text-text-muted bg-surface-elevated rounded-lg px-2 py-0.5 border border-border num">
           {order.items.length} صنف
         </span>
         <span className="text-sm font-bold text-primary num">{order.total.toFixed(1)} د.ع</span>
       </div>
-    </button>
+
+      {/* ── Optional action buttons ── */}
+      {actions && (
+        <div className="px-3 pb-3 pt-0 flex flex-col gap-2 border-t border-border mt-0">
+          {actions}
+        </div>
+      )}
+    </div>
   );
 }
