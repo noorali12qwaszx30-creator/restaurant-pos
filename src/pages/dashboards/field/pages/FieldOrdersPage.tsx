@@ -1,18 +1,13 @@
 import { useState, useMemo } from "react";
-import { Search, X, Clock, Phone, MapPin, AlertTriangle, AlertCircle, AlertOctagon, Bike, Package } from "lucide-react";
+import { Search, X, AlertTriangle, Package } from "lucide-react";
 import { useOrders, type LiveOrder } from "@/contexts/OrderContext";
 import { MOCK_DRIVERS } from "@/data/mock-drivers";
-import { StatusBadge } from "@/components/dashboard/StatusBadge";
+import { OrderCard } from "@/components/dashboard/OrderCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { OrderDetailDialog } from "@/components/dashboard/OrderDetailDialog";
 import { cn } from "@/lib/utils";
 
 function waitedMin(d: Date) { return Math.floor((Date.now() - d.getTime()) / 60000); }
-function waitedLabel(d: Date) {
-  const m = waitedMin(d);
-  return m < 60 ? `${m} د` : `${Math.floor(m / 60)} س`;
-}
-
 function normalizeAr(s: string) {
   return s.replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/[ىئ]/g, "ي").toLowerCase().trim();
 }
@@ -20,72 +15,6 @@ function normalizeAr(s: string) {
 type ZoneFilter   = "all" | string;
 type DriverFilter = "all" | string;
 type StatusFilter = "all" | "ready" | "delivering";
-
-function DelayBadge({ createdAt }: { createdAt: Date }) {
-  const m = waitedMin(createdAt);
-  if (m >= 40) return <span className="text-[10px] font-bold text-status-error bg-status-error/10 border border-status-error/20 rounded-full px-1.5 py-0.5 inline-flex items-center gap-1"><AlertOctagon className="w-2.5 h-2.5" /> حرج</span>;
-  if (m >= 25) return <span className="text-[10px] font-bold text-status-error bg-status-error/8  border border-status-error/15 rounded-full px-1.5 py-0.5 inline-flex items-center gap-1"><AlertCircle className="w-2.5 h-2.5" /> خطر</span>;
-  if (m >= 15) return <span className="text-[10px] font-bold text-status-warning bg-status-warning/10 border border-status-warning/20 rounded-full px-1.5 py-0.5 inline-flex items-center gap-1"><AlertTriangle className="w-2.5 h-2.5" /> تحذير</span>;
-  return null;
-}
-
-function OrderRow({ order, onClick }: { order: LiveOrder; onClick: () => void }) {
-  const m = waitedMin(order.createdAt);
-  const isDelayed = m >= 15;
-
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "w-full text-start bg-surface border rounded-2xl p-3 flex flex-col gap-2 hover:bg-surface-elevated transition-all active:scale-[0.99] shadow-card",
-        m >= 40 ? "border-status-error/40"
-        : m >= 25 ? "border-status-error/25"
-        : m >= 15 ? "border-status-warning/25"
-        : "border-border"
-      )}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-bold text-text-primary">{order.id}</span>
-          <StatusBadge status={order.status} />
-          {isDelayed && <DelayBadge createdAt={order.createdAt} />}
-          {order.hasIssue && (
-            <span className="text-[10px] font-bold text-status-error bg-status-error/10 border border-status-error/20 rounded-full px-1.5 py-0.5 inline-flex items-center gap-1"><AlertTriangle className="w-2.5 h-2.5" /> مشكلة</span>
-          )}
-        </div>
-        <span className="text-xs text-text-muted shrink-0 flex items-center gap-0.5">
-          <Clock className="w-3 h-3" />{waitedLabel(order.createdAt)}
-        </span>
-      </div>
-
-      <div className="flex items-center gap-3">
-        {order.customerName && (
-          <span className="text-xs text-text-secondary flex items-center gap-1">
-            <Phone className="w-3 h-3 text-text-muted" />{order.customerName}
-          </span>
-        )}
-        {order.zone && (
-          <span className="text-xs text-status-info flex items-center gap-1">
-            <MapPin className="w-3 h-3" />{order.zone}
-          </span>
-        )}
-      </div>
-
-      {order.driverName && (
-        <span className="text-xs text-primary bg-primary/8 border border-primary/15 rounded-lg px-2 py-1 w-fit">
-          <Bike className="w-3 h-3 inline-block mr-0.5" /> {order.driverName}
-        </span>
-      )}
-
-      <div className="flex justify-between items-center">
-        <span className="text-xs text-text-muted line-clamp-1">
-          {order.items.map(i => i.name).join(" · ")}
-        </span>
-        <span className="text-sm font-bold text-primary shrink-0">{order.total.toFixed(1)} د.ع</span>
-      </div>
-    </button>
-  );
-}
 
 export function FieldOrdersPage() {
   const [query, setQuery]           = useState("");
@@ -165,7 +94,7 @@ export function FieldOrdersPage() {
 
           <div className="flex flex-col gap-2">
             {delayedOrders.map(o => (
-              <OrderRow key={o.id} order={o} onClick={() => setSelected(o)} />
+              <OrderCard key={o.id} order={o} onClick={() => setSelected(o)} />
             ))}
           </div>
         </section>
@@ -247,7 +176,7 @@ export function FieldOrdersPage() {
         {results.length === 0 ? (
           <EmptyState icon={<Package className="w-8 h-8" />} title="لا توجد طلبات" description="جرّب تغيير الفلاتر أو البحث" />
         ) : (
-          results.map(o => <OrderRow key={o.id} order={o} onClick={() => setSelected(o)} />)
+          results.map(o => <OrderCard key={o.id} order={o} onClick={() => setSelected(o)} />)
         )}
       </div>
 
