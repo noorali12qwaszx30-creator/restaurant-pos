@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { CheckCircle2, ChefHat, Loader2, Clock, AlertCircle, RefreshCw } from "lucide-react";
 import { useOrders, type LiveOrder } from "@/contexts/OrderContext";
 import { MOCK_DRIVERS } from "@/data/mock-drivers";
@@ -52,9 +52,56 @@ function DispatchedRow({ order }: { order: LiveOrder }) {
   );
 }
 
+// ── New order chime (double ding) ────────────────────────────
+function playNewOrderSound() {
+  try {
+    const ctx = new (window.AudioContext || (window as never as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    function ding(freq: number, startAt: number, duration: number) {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startAt);
+      gain.gain.setValueAtTime(0, ctx.currentTime + startAt);
+      gain.gain.linearRampToValueAtTime(0.55, ctx.currentTime + startAt + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startAt + duration);
+      osc.start(ctx.currentTime + startAt);
+      osc.stop(ctx.currentTime + startAt + duration);
+    }
+    ding(880, 0,    0.5);  // first ding
+    ding(1100, 0.3, 0.5);  // second ding (higher)
+    setTimeout(() => ctx.close(), 1200);
+  } catch { /* silence on unsupported browsers */ }
+}
+
 // ══════════════════════════════════════════════════════════════
 export function FieldHomePage() {
   const { orders, isLoading, loadError, refetch, markReady } = useOrders();
+
+  // ── Detect new delivery orders and play sound ──
+  const seenIds = useRef<Set<string>>(new Set());
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    const deliveryOrders = orders.filter(o =>
+      o.type === "delivery" && !["delivered", "cancelled"].includes(o.status)
+    );
+    if (!initialized.current) {
+      // First load — mark all existing as seen, no sound
+      deliveryOrders.forEach(o => seenIds.current.add(o.id));
+      initialized.current = true;
+      return;
+    }
+    let hasNew = false;
+    deliveryOrders.forEach(o => {
+      if (!seenIds.current.has(o.id)) {
+        seenIds.current.add(o.id);
+        hasNew = true;
+      }
+    });
+    if (hasNew) playNewOrderSound();
+  }, [orders]);
 
   const pendingOrders = useMemo(
     () => orders.filter(o => o.status === "pending" && o.type === "delivery")
