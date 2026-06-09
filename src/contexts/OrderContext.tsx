@@ -210,7 +210,11 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         },
         onUpdate: (o) => {
           const live = dbOrderToLive(o);
-          setOrders(prev => prev.map(p => p.id === live.id ? live : p));
+          setOrders(prev => prev.map(p => {
+            if (p.id !== live.id) return p;
+            // Realtime UPDATE rows don't include order_items — preserve existing items
+            return { ...live, items: live.items.length > 0 ? live.items : p.items };
+          }));
         },
         onDelete: (id) => {
           setOrders(prev => prev.filter(p => p.id !== id));

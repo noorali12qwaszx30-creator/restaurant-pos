@@ -2,7 +2,7 @@
  * EditOrderDialog — تعديل طلب قائم (معلومات الزبون + الأصناف)
  * متاح فقط للكاشير ما لم يصل الطلب لمرحلة "قيد التوصيل"
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Minus, Plus, Trash2, MessageSquare, FileText, Check, Loader2, Save, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody } from "@/components/ui/dialog";
@@ -101,9 +101,12 @@ export function EditOrderDialog({ order, onClose }: Props) {
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // seed state from order whenever it changes
+  // seed state only when dialog first opens (order.id changes), not on every re-render
+  const lastOrderId = useRef<string | null>(null);
   useEffect(() => {
-    if (!order) return;
+    if (!order) { lastOrderId.current = null; return; }
+    if (order.id === lastOrderId.current) return; // already seeded for this order
+    lastOrderId.current = order.id;
     setCustomer({
       name:    order.customerName  ?? "",
       phone:   order.customerPhone ?? "",
