@@ -50,6 +50,7 @@ export function SearchReportsTab() {
       if (!q) return true;
       return (
         normalizeAr(o.id).includes(q) ||
+        String(o.orderNumber ?? "").includes(query) ||
         normalizeAr(o.customerName ?? "").includes(q) ||
         (o.customerPhone ?? "").includes(query) ||
         normalizeAr(o.deliveryAddress ?? "").includes(q)
@@ -144,7 +145,9 @@ export function SearchReportsTab() {
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <span className="text-sm font-bold text-text-primary">{o.id}</span>
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-primary/10 text-primary text-sm font-bold num shrink-0">
+                    {o.orderNumber ?? o.id.slice(0, 4)}
+                  </span>
                   <StatusBadge status={o.status} />
                   <OrderTypeBadge type={o.type} />
                 </div>
