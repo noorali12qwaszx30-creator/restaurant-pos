@@ -74,18 +74,16 @@ function StatsBar({ newCount, preparingCount, readyCount, lateCount }: {
   return (
     <div className="grid grid-cols-4 gap-2">
       {[
-        { label: "جديدة",        value: newCount,       cls: "text-status-warning", bg: "bg-status-warning/8 border-status-warning/20", Icon: Package      },
-        { label: "قيد التحضير", value: preparingCount, cls: "text-primary",        bg: "bg-primary/8 border-primary/20",               Icon: Timer        },
-        { label: "جاهزة",       value: readyCount,     cls: "text-status-success", bg: "bg-status-success/8 border-status-success/20", Icon: CheckCircle2 },
-        { label: "متأخرة",      value: lateCount,      cls: "text-status-error",   bg: "bg-status-error/8 border-status-error/20",     Icon: AlertOctagon },
+        { label: "جديدة",        value: newCount,       cls: "text-status-warning", bg: "bg-status-warning/10 border-status-warning/25", Icon: Package      },
+        { label: "قيد التحضير", value: preparingCount, cls: "text-primary",        bg: "bg-primary/10 border-primary/25",               Icon: Timer        },
+        { label: "جاهزة",       value: readyCount,     cls: "text-status-success", bg: "bg-status-success/10 border-status-success/25", Icon: CheckCircle2 },
+        { label: "متأخرة",      value: lateCount,      cls: "text-status-error",   bg: "bg-status-error/10 border-status-error/25",     Icon: AlertOctagon },
       ].map(s => (
-        <div key={s.label} className={cn("rounded-2xl border p-3 flex items-center gap-3", s.bg)}>
-          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", s.bg)}>
-            <s.Icon className={cn("w-5 h-5", s.cls)} />
-          </div>
+        <div key={s.label} className={cn("rounded-2xl border p-3 flex flex-col gap-2 shadow-card", s.bg)}>
+          <s.Icon className={cn("w-5 h-5", s.cls)} />
           <div>
-            <p className={cn("text-3xl font-black leading-none", s.cls)}>{s.value}</p>
-            <p className="text-xs text-text-muted mt-0.5 font-medium">{s.label}</p>
+            <p className={cn("text-3xl font-black leading-none num", s.cls)}>{s.value}</p>
+            <p className="text-[11px] text-text-muted mt-0.5 font-semibold">{s.label}</p>
           </div>
         </div>
       ))}
@@ -130,55 +128,61 @@ function KitchenOrderCard({ order, alarmLevel, onStartPreparing }: KitchenCardPr
 
   return (
     <div className={cn(
-      "bg-surface border-2 rounded-xl overflow-hidden flex flex-col shadow-card transition-all duration-200",
-      borderCls
+      "bg-surface border-2 rounded-2xl overflow-hidden flex flex-col shadow-elevated transition-all duration-200",
+      borderCls,
+      alarmLevel === 3 && "ring-2 ring-status-error/20"
     )}>
       {/* colour strip */}
-      <div className={cn("h-1", stripCls)} />
+      <div className={cn("h-1.5", stripCls)} />
 
       {/* header: ID + timer */}
-      <div className={cn("px-2.5 pt-2 pb-1.5 flex items-start justify-between gap-1", headerBg)}>
-        <div className="min-w-0">
-          <p className="text-xl font-black leading-none text-text-primary truncate">{order.id}</p>
-          <div className="flex items-center gap-1 mt-1 flex-wrap">
+      <div className={cn("px-3 pt-2.5 pb-2 flex items-start justify-between gap-2", headerBg)}>
+        <div className="min-w-0 flex-1">
+          <p className="text-lg font-black leading-none text-text-primary truncate num">
+            #{order.orderNumber ?? order.id.slice(0, 5)}
+          </p>
+          <div className="flex items-center gap-1 mt-1.5 flex-wrap">
             <StatusChip status={order.status} />
             <TypeChip   type={order.type} />
           </div>
         </div>
-        <div className="text-right shrink-0 ml-1">
-          <p className={cn("text-xl leading-none", ageCls)}>{ageLabel(age)}</p>
-          <p className="text-[9px] text-text-muted leading-none mt-0.5">{timeLabel(order.createdAt)}</p>
-          {alarmLevel >= 1 && <DelayBadge level={alarmLevel} age={age} />}
+        <div className="text-left shrink-0">
+          <p className={cn("text-2xl font-black leading-none num", ageCls)}>{ageLabel(age)}</p>
+          <p className="text-[10px] text-text-muted leading-none mt-1 num">{timeLabel(order.createdAt)}</p>
+          {alarmLevel >= 1 && <div className="mt-1"><DelayBadge level={alarmLevel} age={age} /></div>}
         </div>
       </div>
 
       {/* customer / table */}
       {order.customerName && (
-        <div className="px-2.5 py-1 border-t border-border flex items-center gap-2 bg-surface">
-          <span className="text-[11px] text-text-muted truncate">{order.customerName}</span>
+        <div className="px-3 py-1.5 border-t border-border flex items-center gap-2 bg-surface">
+          <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-bold text-primary shrink-0">
+            {order.customerName[0]}
+          </div>
+          <span className="text-[11px] text-text-secondary font-medium truncate">{order.customerName}</span>
         </div>
       )}
 
       {/* order notes */}
       {order.notes && (
-        <div className="mx-2 mt-1 px-2 py-1 rounded-lg bg-status-warning/10 border border-status-warning/25 flex items-center gap-1">
-          <AlertTriangle className="w-3 h-3 text-status-warning shrink-0" />
-          <p className="text-[11px] text-status-warning font-semibold leading-tight truncate">{order.notes}</p>
+        <div className="mx-2.5 mt-1.5 px-2.5 py-1.5 rounded-xl bg-status-warning/10 border border-status-warning/25 flex items-start gap-1.5">
+          <AlertTriangle className="w-3 h-3 text-status-warning shrink-0 mt-0.5" />
+          <p className="text-[11px] text-status-warning font-semibold leading-snug">{order.notes}</p>
         </div>
       )}
 
       {/* items list */}
-      <div className="px-2.5 py-1.5 flex flex-col gap-1 flex-1">
+      <div className="px-2.5 py-2 flex flex-col gap-1.5 flex-1">
         {order.items.map((item, i) => (
-          <div key={i} className="flex items-center gap-1.5 bg-surface-elevated rounded-lg px-2 py-1">
-            <span className="text-[11px] font-bold text-primary bg-primary/10 rounded px-1.5 leading-tight shrink-0">
+          <div key={i} className="flex items-center gap-2 bg-surface-elevated rounded-xl px-2.5 py-1.5 border border-border/50">
+            <span className="text-sm font-black text-primary bg-primary/12 rounded-lg px-2 py-0.5 leading-tight shrink-0 num min-w-[28px] text-center">
               ×{item.quantity}
             </span>
-            <span className="text-[12px] font-semibold text-text-primary leading-tight flex-1 truncate">
+            <span className="text-[13px] font-bold text-text-primary leading-tight flex-1 truncate">
               {item.name}
             </span>
             {item.notes && (
-              <span className="text-[9px] text-status-warning shrink-0 truncate max-w-[40%]">
+              <span className="text-[9px] text-status-warning shrink-0 truncate max-w-[38%] bg-status-warning/10 rounded px-1">
                 {item.notes}
               </span>
             )}
@@ -186,14 +190,14 @@ function KitchenOrderCard({ order, alarmLevel, onStartPreparing }: KitchenCardPr
         ))}
       </div>
 
-      {/* Tap-to-start button — only on pending orders */}
+      {/* Tap-to-start button */}
       {isNew && onStartPreparing && (
-        <div className="px-2.5 pb-2.5 pt-1.5 border-t border-border mt-auto">
+        <div className="px-2.5 pb-3 pt-2 border-t border-border mt-auto">
           <button
             onClick={onStartPreparing}
-            className="w-full h-9 rounded-lg bg-primary/10 text-primary border border-primary/25 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-primary/20 active:scale-[0.97] transition-all"
+            className="w-full h-10 rounded-xl bg-primary text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary-hover active:scale-[0.97] transition-all shadow-sm"
           >
-            <Timer className="w-3.5 h-3.5" />
+            <Timer className="w-4 h-4" />
             بدء التحضير
           </button>
         </div>
@@ -252,12 +256,17 @@ export function KitchenDashboard() {
         />
 
         {kitchenOrders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <div className="w-20 h-20 rounded-3xl bg-surface-elevated border border-border flex items-center justify-center">
-              <ChefHat className="w-10 h-10 text-text-muted" />
+          <div className="flex flex-col items-center justify-center py-20 gap-4 animate-in">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-3xl bg-surface border border-border shadow-card flex items-center justify-center">
+                <ChefHat className="w-12 h-12 text-text-muted" strokeWidth={1.5} />
+              </div>
+              <div className="absolute -inset-3 bg-status-success/8 rounded-[2rem] blur-xl -z-10" />
             </div>
-            <p className="text-lg font-bold text-text-primary">لا توجد طلبات نشطة</p>
-            <p className="text-sm text-text-muted">قائمة الطهي فارغة حالياً</p>
+            <div className="text-center">
+              <p className="text-xl font-bold text-text-primary tracking-tight">المطبخ هادئ الآن</p>
+              <p className="text-sm text-text-muted mt-1">لا توجد طلبات نشطة في قائمة الطهي</p>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-6 gap-3">

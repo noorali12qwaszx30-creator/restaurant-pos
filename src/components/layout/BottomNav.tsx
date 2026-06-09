@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import type { UserRole } from "@/types";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 type NavItem = {
   to: string;
@@ -61,9 +62,9 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   admin: [
     { to: "/dashboard/admin",            label: "الرئيسية",   icon: LayoutDashboard  },
     { to: "/dashboard/admin/orders",     label: "الطلبات",    icon: ShoppingBag      },
-    { to: "/dashboard/admin/stats",      label: "الإحصائيات", icon: BarChart3        },
+    { to: "/dashboard/admin/stats",      label: "إحصائيات",  icon: BarChart3        },
     { to: "/dashboard/admin/users",      label: "الموظفون",   icon: Users            },
-    { to: "/dashboard/admin/settings",   label: "الإعدادات",  icon: Settings         },
+    { to: "/dashboard/admin/settings",   label: "إعدادات",    icon: Settings         },
     { to: "/dashboard/admin/assistant",  label: "المساعد",    icon: BotMessageSquare },
   ],
 };
@@ -74,44 +75,67 @@ interface BottomNavProps {
 
 export function BottomNav({ role }: BottomNavProps) {
   const items = NAV_ITEMS[role];
+  const isAdmin = role === "admin";
 
   return (
     <nav
       className={cn(
-        "fixed bottom-0 inset-x-0 z-50 h-[var(--nav-height)]",
-        "glass border-t border-border/60",
-        "flex items-center justify-around px-2 pb-safe"
+        "fixed bottom-0 inset-x-0 z-50",
+        "glass border-t border-white/30 shadow-dialog",
+        isAdmin
+          ? "flex items-center justify-around px-1 pb-safe h-[var(--nav-height)]"
+          : "flex items-center justify-center pb-safe h-[var(--nav-height)]"
       )}
     >
-      {items.map(({ to, label, icon: Icon }) => (
-        <NavLink
-          key={to}
-          to={to}
-          end
-          className={({ isActive }) =>
-            cn(
-              "flex flex-col items-center justify-center gap-1 flex-1 py-2 rounded-lg transition-colors",
-              isActive
-                ? "text-primary"
-                : "text-text-muted hover:text-text-secondary"
-            )
-          }
-        >
-          {({ isActive }) => (
-            <>
-              <div
-                className={cn(
-                  "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
-                  isActive && "bg-primary/15"
+      <div className={cn(
+        "flex items-center gap-1",
+        !isAdmin && "bg-white/70 dark:bg-surface/80 backdrop-blur-xl rounded-2xl border border-border/40 shadow-elevated px-2 py-1.5 mx-4"
+      )}>
+        {items.map(({ to, label, icon: Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end
+            className={({ isActive }) =>
+              cn(
+                "relative flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl transition-all duration-200",
+                isAdmin ? "flex-1 px-1" : "px-3.5",
+                isActive
+                  ? "text-primary"
+                  : "text-text-muted hover:text-text-secondary"
+              )
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <div
+                  className={cn(
+                    "w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200",
+                    isActive
+                      ? "bg-primary text-white shadow-sm scale-105"
+                      : "text-text-muted"
+                  )}
+                >
+                  <Icon className="w-4.5 h-4.5" strokeWidth={isActive ? 2.5 : 1.8} />
+                </div>
+                <span className={cn(
+                  "text-[9px] font-semibold leading-none transition-all duration-200",
+                  isActive ? "text-primary" : "text-text-muted"
+                )}>
+                  {label}
+                </span>
+                {isActive && (
+                  <motion.div
+                    layoutId={`nav-indicator-${role}`}
+                    className="absolute bottom-1 w-1 h-1 rounded-full bg-primary"
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  />
                 )}
-              >
-                <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 1.8} />
-              </div>
-              <span className="text-[10px] font-medium leading-none">{label}</span>
-            </>
-          )}
-        </NavLink>
-      ))}
+              </>
+            )}
+          </NavLink>
+        ))}
+      </div>
     </nav>
   );
 }

@@ -31,19 +31,25 @@ function fmtTime(d: Date) {
 /* ─── KPI Card ───────────────────────────────────────────────── */
 function KpiCard({ kpi }: { kpi: PulseKpi }) {
   return (
-    <div className={cn("relative bg-surface border rounded-2xl p-3.5 flex flex-col gap-2 shadow-card", kpi.color)}>
+    <div className={cn(
+      "relative bg-surface border rounded-2xl p-4 flex flex-col gap-2.5 shadow-card",
+      "transition-all duration-200 hover:shadow-elevated hover:-translate-y-0.5",
+      kpi.color
+    )}>
       <div className="flex items-start justify-between">
-        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", kpi.bg)}>
-          <kpi.icon className="w-4.5 h-4.5" style={{ color: "currentColor" }} />
+        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", kpi.bg)}>
+          <kpi.icon className="w-5 h-5" />
         </div>
         {kpi.pulse && (
-          <span className="w-2 h-2 rounded-full bg-status-success animate-pulse" />
+          <span className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-status-success animate-pulse" />
+          </span>
         )}
       </div>
       <div>
-        <p className="text-2xl font-bold text-text-primary leading-none">{kpi.value}</p>
-        <p className="text-[11px] text-text-muted mt-0.5 leading-tight">{kpi.label}</p>
-        {kpi.sub && <p className="text-[10px] text-text-muted/70 mt-0.5">{kpi.sub}</p>}
+        <p className="text-2xl font-black text-text-primary leading-none num">{kpi.value}</p>
+        <p className="text-[11px] font-semibold text-text-muted mt-1 leading-tight">{kpi.label}</p>
+        {kpi.sub && <p className="text-[10px] text-text-muted/60 mt-0.5">{kpi.sub}</p>}
       </div>
     </div>
   );
@@ -270,14 +276,14 @@ export function AdminHomePage() {
     <div className="flex flex-col gap-4 px-4 pt-4 pb-6">
 
       {/* Header badge */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pt-1">
         <div>
-          <h2 className="text-base font-bold text-text-primary">لوحة المدير</h2>
-          <p className="text-xs text-text-muted mt-0.5">التحديث كل 30 ثانية</p>
+          <h2 className="text-xl font-black text-text-primary tracking-tight">لوحة المدير</h2>
+          <p className="text-xs text-text-muted mt-0.5 font-medium">بيانات مباشرة · تحديث كل 30 ث</p>
         </div>
-        <div className="flex items-center gap-1.5 bg-status-success/10 border border-status-success/20 rounded-full px-3 py-1.5">
+        <div className="flex items-center gap-1.5 bg-status-success/10 border border-status-success/25 rounded-full px-3 py-1.5 shadow-sm">
           <RefreshCw className="w-3 h-3 text-status-success animate-spin" style={{ animationDuration: "3s" }} />
-          <span className="text-[10px] font-semibold text-status-success">مباشر</span>
+          <span className="text-[11px] font-bold text-status-success">مباشر</span>
         </div>
       </div>
 

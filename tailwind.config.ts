@@ -78,6 +78,7 @@ const config: Config = {
       boxShadow: {
         card: "var(--shadow-card)",
         elevated: "var(--shadow-elevated)",
+        dialog: "var(--shadow-dialog)",
       },
       spacing: {
         "nav-height": "var(--nav-height)",

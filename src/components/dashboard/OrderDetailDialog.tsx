@@ -32,65 +32,74 @@ export function OrderDetailDialog({ order, onClose, extraActions }: OrderDetailD
       <DialogContent>
         <DialogHeader onClose={onClose}>
           <div className="flex items-center gap-2 flex-wrap">
-            <DialogTitle>طلب #{order.orderNumber ?? order.id.slice(0,6)}</DialogTitle>
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-primary/10 text-primary text-sm font-bold num">
+              {order.orderNumber ?? order.id.slice(0, 4)}
+            </span>
+            <DialogTitle>طلب #{order.orderNumber ?? order.id.slice(0, 6)}</DialogTitle>
             <StatusBadge status={order.status} />
             <OrderTypeBadge type={order.type} />
           </div>
         </DialogHeader>
 
         <DialogBody className="flex flex-col gap-4">
-          {/* Info */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Info grid */}
+          <div className="grid grid-cols-2 gap-2.5">
             {order.tableNumber && (
-              <div className="flex items-center gap-2 text-sm text-text-secondary">
-                <MapPin className="w-4 h-4 text-text-muted" />
-                <span>طاولة {order.tableNumber}</span>
+              <div className="flex items-center gap-2 bg-surface-elevated rounded-xl px-3 py-2.5 border border-border">
+                <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span className="text-sm text-text-secondary">طاولة {order.tableNumber}</span>
               </div>
             )}
             {order.customerName && (
-              <div className="flex items-center gap-2 text-sm text-text-secondary">
-                <User className="w-4 h-4 text-text-muted" />
-                <span>{order.customerName}</span>
+              <div className="flex items-center gap-2 bg-surface-elevated rounded-xl px-3 py-2.5 border border-border">
+                <User className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                <span className="text-sm text-text-secondary truncate">{order.customerName}</span>
               </div>
             )}
             {order.customerPhone && (
-              <div className="flex items-center gap-2 text-sm text-text-secondary">
-                <Phone className="w-4 h-4 text-text-muted" />
-                <span dir="ltr">{order.customerPhone}</span>
+              <div className="flex items-center gap-2 bg-surface-elevated rounded-xl px-3 py-2.5 border border-border">
+                <Phone className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                <span className="text-sm text-text-secondary" dir="ltr">{order.customerPhone}</span>
               </div>
             )}
-            <div className="flex items-center gap-2 text-sm text-text-secondary">
-              <Clock className="w-4 h-4 text-text-muted" />
-              <span>{order.createdAt.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" })}</span>
+            <div className="flex items-center gap-2 bg-surface-elevated rounded-xl px-3 py-2.5 border border-border">
+              <Clock className="w-3.5 h-3.5 text-text-muted shrink-0" />
+              <span className="text-sm text-text-secondary">
+                {order.createdAt.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" })}
+              </span>
             </div>
           </div>
 
           {order.deliveryAddress && (
-            <div className="bg-surface-elevated rounded-xl p-3 text-sm text-text-secondary">
-              <p className="text-xs text-text-muted mb-1">عنوان التوصيل</p>
-              {order.deliveryAddress}
+            <div className="bg-surface-elevated rounded-xl p-3.5 border border-border">
+              <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wide mb-1.5">عنوان التوصيل</p>
+              <p className="text-sm text-text-secondary leading-relaxed">{order.deliveryAddress}</p>
             </div>
           )}
 
           {order.notes && (
-            <div className="bg-status-warning/10 border border-status-warning/20 rounded-xl p-3 text-sm text-text-secondary">
-              <p className="text-xs text-status-warning mb-1">ملاحظات</p>
-              {order.notes}
+            <div className="bg-status-warning/8 border border-status-warning/25 rounded-xl p-3.5">
+              <p className="text-[10px] font-semibold text-status-warning uppercase tracking-wide mb-1.5">ملاحظات</p>
+              <p className="text-sm text-text-secondary leading-relaxed">{order.notes}</p>
             </div>
           )}
 
           <Separator />
 
           {/* Items */}
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-text-primary">الأصناف</p>
+          <div className="flex flex-col gap-1">
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-1">الأصناف</p>
             {order.items.map((item, i) => (
-              <div key={i} className="flex items-center justify-between text-sm">
-                <span className="text-text-secondary">
-                  {item.name}
-                  <span className="text-text-muted ms-1">×{item.quantity}</span>
+              <div key={i} className="flex items-center justify-between text-sm py-2 border-b border-border last:border-0">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary text-[11px] font-bold flex items-center justify-center shrink-0 num">
+                    {item.quantity}
+                  </span>
+                  <span className="text-text-secondary">{item.name}</span>
+                </div>
+                <span className="text-text-primary font-semibold num">
+                  {(item.unitPrice * item.quantity).toFixed(1)} د.ع
                 </span>
-                <span className="text-text-primary font-medium">{(item.unitPrice * item.quantity).toFixed(1)} د.ع</span>
               </div>
             ))}
           </div>
@@ -98,22 +107,24 @@ export function OrderDetailDialog({ order, onClose, extraActions }: OrderDetailD
           <Separator />
 
           {/* Totals */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <div className="flex justify-between text-sm text-text-secondary">
               <span>المجموع الفرعي</span>
-              <span>{order.subtotal.toFixed(1)} د.ع</span>
+              <span className="num">{order.subtotal.toFixed(1)} د.ع</span>
             </div>
             <div className="flex justify-between text-sm text-text-secondary">
               <span>ضريبة القيمة المضافة (15%)</span>
-              <span>{order.tax.toFixed(1)} د.ع</span>
+              <span className="num">{order.tax.toFixed(1)} د.ع</span>
             </div>
-            <div className="flex justify-between text-base font-bold text-text-primary mt-1 pt-1 border-t border-border">
+            <div className="flex justify-between text-base font-bold text-text-primary mt-1 pt-2 border-t border-border">
               <span>الإجمالي</span>
-              <span className="text-primary">{order.total.toFixed(1)} د.ع</span>
+              <span className="text-primary num">{order.total.toFixed(1)} د.ع</span>
             </div>
           </div>
 
-          {extraActions && <div className="flex flex-col gap-2 mt-2">{extraActions}</div>}
+          {extraActions && (
+            <div className="flex flex-col gap-2.5 mt-1">{extraActions}</div>
+          )}
         </DialogBody>
       </DialogContent>
     </Dialog>

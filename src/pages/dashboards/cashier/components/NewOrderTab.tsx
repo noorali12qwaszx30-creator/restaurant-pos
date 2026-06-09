@@ -203,8 +203,8 @@ export function NewOrderTab() {
       )}
 
       {/* ══ 1. نوع الطلب ══ */}
-      <section className="px-4 pt-3 pb-4 border-b border-border bg-surface">
-        <p className="text-xs font-semibold text-text-muted mb-2.5 uppercase tracking-wide">نوع الطلب</p>
+      <section className="px-4 pt-4 pb-4 border-b border-border/60 bg-surface">
+        <p className="text-[11px] font-bold text-text-muted mb-2.5 uppercase tracking-widest">نوع الطلب</p>
         <OrderTypeSelector value={orderType} onChange={(v) => { setOrderType(v); if (v !== "delivery") setZoneId(""); }} />
         {orderType === "delivery" && (
           <div className="mt-2.5">
@@ -214,8 +214,8 @@ export function NewOrderTab() {
       </section>
 
       {/* ══ 2. معلومات الزبون ══ */}
-      <section className="px-4 pt-3 pb-4 border-b border-border bg-surface">
-        <p className="text-xs font-semibold text-text-muted mb-2.5 uppercase tracking-wide">معلومات الزبون</p>
+      <section className="px-4 pt-4 pb-4 border-b border-border/60 bg-surface">
+        <p className="text-[11px] font-bold text-text-muted mb-2.5 uppercase tracking-widest">معلومات الزبون</p>
         <CustomerSection
           value={customer}
           showAddress={orderType === "delivery"}
@@ -227,9 +227,9 @@ export function NewOrderTab() {
       </section>
 
       {/* ══ 3. السلة ══ */}
-      <section className="px-4 pt-3 pb-4 border-b border-border bg-surface">
+      <section className="px-4 pt-4 pb-4 border-b border-border/60 bg-surface">
         <div className="flex items-center justify-between mb-2.5">
-          <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">السلة</p>
+          <p className="text-[11px] font-bold text-text-muted uppercase tracking-widest">السلة</p>
           {cart.items.length > 0 && (
             <span className="text-xs font-bold text-primary bg-primary/10 rounded-full px-2 py-0.5">
               {cart.itemCount} صنف
@@ -284,7 +284,7 @@ export function NewOrderTab() {
             <button
               onClick={handleSubmitClick}
               disabled={isSubmitting}
-              className="mt-3 w-full h-13 rounded-xl bg-primary text-primary-foreground font-bold text-base flex items-center justify-center gap-2 hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-60 disabled:pointer-events-none shadow-card"
+              className="mt-3 w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-base flex items-center justify-center gap-2 hover:bg-primary-hover hover:shadow-elevated hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all disabled:opacity-60 disabled:pointer-events-none shadow-card"
             >
               {isSubmitting ? (
                 <>

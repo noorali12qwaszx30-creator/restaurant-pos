@@ -92,18 +92,20 @@ function AdminOrderCard({ order }: { order: LiveOrder }) {
   const TypeIcon = typeIcon;
 
   return (
-    <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-card">
-      {/* Top strip based on status */}
-      <div className={cn("h-0.5", {
-        "bg-status-warning":    order.status === "pending",
-        "bg-primary":           order.status === "preparing",
-        "bg-status-success":    order.status === "ready",
-        "bg-status-info/70":    order.status === "delivering",
-        "bg-status-success/50": order.status === "delivered",
-        "bg-status-error/50":   order.status === "cancelled",
-      })} />
-
-      <div className="p-3">
+    <div className={cn(
+      "bg-surface border border-border rounded-2xl overflow-hidden shadow-card",
+      "transition-all duration-200 hover:shadow-elevated",
+      "border-r-4",
+      {
+        "border-r-status-warning":   order.status === "pending",
+        "border-r-primary":          order.status === "preparing",
+        "border-r-status-success":   order.status === "ready",
+        "border-r-status-info":      order.status === "delivering",
+        "border-r-status-success/50": order.status === "delivered",
+        "border-r-status-error/50":  order.status === "cancelled",
+      }
+    )}>
+      <div className="p-3.5">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 flex-wrap">

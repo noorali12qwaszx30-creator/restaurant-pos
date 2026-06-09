@@ -108,34 +108,39 @@ export function LoginPage() {
     <div className="min-h-dvh bg-background flex flex-col items-center justify-center p-4">
       {/* Background blobs */}
       <div className="fixed inset-0 pointer-events-none" aria-hidden>
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[350px] bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-[280px] h-[280px] bg-primary/3 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/8 rounded-full blur-[80px]" />
+        <div className="absolute bottom-0 right-1/4 w-[350px] h-[350px] bg-status-info/5 rounded-full blur-[60px]" />
+        <div className="absolute top-1/2 left-1/4 w-[250px] h-[250px] bg-primary/4 rounded-full blur-[50px]" />
       </div>
 
-      <div className="relative w-full max-w-sm">
+      <div className="relative w-full max-w-sm animate-in">
         {/* Dev badge */}
         {IS_DEV_MODE && (
-          <div className="flex justify-center mb-4">
-            <span className="text-xs bg-status-warning/15 text-status-warning border border-status-warning/30 rounded-full px-3 py-1">
+          <div className="flex justify-center mb-5">
+            <span className="text-xs bg-status-warning/12 text-status-warning border border-status-warning/25 rounded-full px-3.5 py-1.5 font-medium flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-status-warning animate-pulse" />
               وضع التطوير — بدون Firebase
             </span>
           </div>
         )}
 
         {/* Logo */}
-        <div className="flex flex-col items-center gap-2 mb-6">
-          <div className="w-14 h-14 primary-gradient rounded-2xl flex items-center justify-center shadow-elevated">
-            <UtensilsCrossed className="w-7 h-7 text-primary-foreground" strokeWidth={1.5} />
+        <div className="flex flex-col items-center gap-3 mb-7">
+          <div className="relative">
+            <div className="w-16 h-16 primary-gradient rounded-2xl flex items-center justify-center shadow-elevated">
+              <UtensilsCrossed className="w-8 h-8 text-primary-foreground" strokeWidth={1.5} />
+            </div>
+            <div className="absolute -inset-2 bg-primary/15 rounded-3xl blur-xl -z-10" />
           </div>
           <div className="text-center">
-            <h1 className="text-xl font-bold text-text-primary">Twitter POS</h1>
-            <p className="text-xs text-text-muted mt-0.5">نظام إدارة المطعم</p>
+            <h1 className="text-xl font-bold text-text-primary tracking-tight">Twitter POS</h1>
+            <p className="text-xs text-text-muted mt-0.5 font-medium">نظام إدارة المطعم</p>
           </div>
         </div>
 
         {/* Card */}
-        <div className="bg-surface border border-border rounded-2xl p-5 shadow-elevated">
-          <h2 className="text-base font-semibold text-text-primary mb-5 text-center">
+        <div className="bg-surface border border-border/60 rounded-3xl p-6 shadow-dialog">
+          <h2 className="text-lg font-bold text-text-primary mb-6 text-center tracking-tight">
             تسجيل الدخول
           </h2>
 
@@ -197,6 +202,7 @@ export function LoginPage() {
                 {ALL_ROLES.map((roleId) => {
                   const cfg = ROLE_CONFIGS[roleId];
                   const isSelected = selectedRole === roleId;
+                  const Icon = ROLE_ICONS[cfg.iconName] ?? Settings2;
                   return (
                     <button
                       key={roleId}
@@ -206,17 +212,22 @@ export function LoginPage() {
                         setRoleError(false);
                       }}
                       className={cn(
-                        "flex flex-col items-center gap-1 py-3 px-1 rounded-xl border transition-all duration-150",
-                        "active:scale-95",
+                        "flex flex-col items-center gap-1.5 py-3.5 px-1 rounded-2xl border transition-all duration-150",
+                        "active:scale-[0.96]",
                         isSelected
                           ? "border-primary bg-primary/10 shadow-card"
-                          : "border-border bg-surface-elevated hover:border-border/80 hover:bg-surface-elevated"
+                          : "border-border bg-surface-elevated hover:border-primary/20 hover:bg-surface"
                       )}
                     >
-                      {(() => { const Icon = ROLE_ICONS[cfg.iconName] ?? Settings2; return <Icon className="w-5 h-5" />; })()}
+                      <div className={cn(
+                        "w-9 h-9 rounded-xl flex items-center justify-center transition-all",
+                        isSelected ? "bg-primary text-white shadow-sm" : "bg-border/60 text-text-muted"
+                      )}>
+                        <Icon className="w-4.5 h-4.5" strokeWidth={2} />
+                      </div>
                       <span
                         className={cn(
-                          "text-[11px] font-medium leading-none",
+                          "text-[11px] font-semibold leading-none",
                           isSelected ? "text-primary" : "text-text-secondary"
                         )}
                       >
@@ -243,7 +254,7 @@ export function LoginPage() {
               type="submit"
               size="lg"
               disabled={isSubmitting}
-              className="w-full"
+              className="w-full rounded-2xl h-13 text-base mt-1"
             >
               {isSubmitting ? (
                 <>

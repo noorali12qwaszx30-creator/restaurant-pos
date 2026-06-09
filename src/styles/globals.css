@@ -2,33 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Design Tokens — outside @layer so Tailwind JIT never purges them ─── */
-
+/* ─── Design Tokens ─── */
 :root {
-  /* Primary — Orange #F97316 as HSL */
+  /* Primary — Rich orange */
   --color-primary: 25 95% 53%;
   --color-primary-foreground: 0 0% 100%;
   --color-primary-hover: 25 95% 46%;
 
-  /* Surfaces — Light mode */
-  --color-background: 0 0% 98%;
+  /* Surfaces */
+  --color-background: 220 20% 97%;
   --color-surface: 0 0% 100%;
-  --color-surface-elevated: 0 0% 96%;
+  --color-surface-elevated: 220 14% 96%;
 
-  /* Borders — Light mode */
-  --color-border: 220 13% 87%;
-  --color-border-subtle: 220 13% 93%;
+  /* Borders */
+  --color-border: 220 13% 89%;
+  --color-border-subtle: 220 13% 94%;
 
-  /* Text — Light mode */
-  --color-text-primary: 224 71% 4%;
-  --color-text-secondary: 220 9% 38%;
-  --color-text-muted: 220 9% 55%;
+  /* Text */
+  --color-text-primary: 222 47% 11%;
+  --color-text-secondary: 215 25% 35%;
+  --color-text-muted: 215 20% 58%;
 
   /* Status */
-  --color-status-success: 142 71% 45%;
+  --color-status-success: 142 76% 36%;
   --color-status-warning: 38 92% 50%;
-  --color-status-error: 0 84% 60%;
-  --color-status-info: 217 91% 60%;
+  --color-status-error: 4 86% 58%;
+  --color-status-info: 199 89% 42%;
 
   /* Shape */
   --radius-lg: 1rem;
@@ -36,43 +35,39 @@
   --radius-sm: 0.5rem;
 
   /* Elevation */
-  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-elevated: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-elevated: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+  --shadow-dialog: 0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
 
   /* Layout */
-  --header-height: 4rem;
-  --nav-height: 5rem;
+  --header-height: 3.75rem;
+  --nav-height: 5.5rem;
 }
 
 .dark {
-  /* Primary stays the same */
   --color-primary: 25 95% 53%;
   --color-primary-foreground: 0 0% 100%;
   --color-primary-hover: 25 95% 60%;
 
-  /* Surfaces — Dark mode */
-  --color-background: 0 0% 7%;
-  --color-surface: 0 0% 11%;
-  --color-surface-elevated: 0 0% 15%;
+  --color-background: 222 20% 8%;
+  --color-surface: 222 18% 11%;
+  --color-surface-elevated: 222 16% 15%;
 
-  /* Borders — Dark mode */
   --color-border: 215 14% 22%;
   --color-border-subtle: 215 14% 18%;
 
-  /* Text — Dark mode */
   --color-text-primary: 213 31% 96%;
   --color-text-secondary: 215 16% 65%;
   --color-text-muted: 215 16% 47%;
 
-  /* Status — same in both modes */
   --color-status-success: 142 71% 45%;
   --color-status-warning: 38 92% 50%;
-  --color-status-error: 0 84% 60%;
-  --color-status-info: 217 91% 60%;
+  --color-status-error: 4 84% 60%;
+  --color-status-info: 199 89% 48%;
 
-  /* Elevation — darker */
-  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
-  --shadow-elevated: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-elevated: 0 4px 6px -1px rgba(0,0,0,0.45), 0 2px 4px -2px rgba(0,0,0,0.35);
+  --shadow-dialog: 0 20px 25px -5px rgba(0,0,0,0.5), 0 8px 10px -6px rgba(0,0,0,0.35);
 }
 
 /* ─── Base Styles ─── */
@@ -84,21 +79,30 @@
 
   html {
     direction: rtl;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
-    @apply bg-background text-text-primary font-sans antialiased;
+    @apply bg-background text-text-primary antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "SF Pro Display", "Noto Sans Arabic", sans-serif;
+    font-feature-settings: "tnum";
     min-height: 100dvh;
     overflow-x: hidden;
+    line-height: 1.5;
   }
 
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { @apply bg-surface; }
+  h1, h2, h3, h4, h5, h6 {
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
   ::-webkit-scrollbar-thumb:hover { @apply bg-text-muted; }
 }
 
-/* ─── Utility Classes ─── */
+/* ─── Utilities ─── */
 @layer utilities {
   .page-container {
     padding-top: var(--header-height);
@@ -106,11 +110,98 @@
     min-height: 100dvh;
   }
 
+  /* Glass morphism */
   .glass {
-    @apply bg-surface/80 backdrop-blur-md border border-border/50;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
   }
 
+  .dark .glass {
+    background: rgba(20, 24, 35, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Premium gradient */
   .primary-gradient {
-    background: linear-gradient(135deg, hsl(var(--color-primary)) 0%, hsl(25 95% 40%) 100%);
+    background: linear-gradient(135deg, hsl(25 95% 58%) 0%, hsl(15 90% 48%) 100%);
+  }
+
+  /* Layered shadows */
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .shadow-dialog {
+    box-shadow: var(--shadow-dialog);
+  }
+
+  /* Fade slide-in animation */
+  .animate-in {
+    animation: fadeSlideIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  .animate-in-fast {
+    animation: fadeSlideIn 0.15s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Slide up from bottom */
+  .slide-up {
+    animation: slideUp 0.28s cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Premium card hover pattern */
+  .card-hover {
+    @apply transition-all duration-200;
+  }
+  .card-hover:hover {
+    box-shadow: var(--shadow-elevated);
+    transform: translateY(-1px);
+  }
+  .card-hover:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Number display (tabular) */
+  .num {
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Subtle background mesh */
+  .mesh-bg {
+    background-image:
+      radial-gradient(at 40% 20%, hsl(var(--color-primary) / 0.06) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, hsl(var(--color-status-info) / 0.04) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, hsl(var(--color-primary) / 0.03) 0px, transparent 50%);
+  }
+
+  /* Status bar left borders */
+  .status-border-pending  { border-right: 3px solid hsl(var(--color-status-warning)); }
+  .status-border-preparing { border-right: 3px solid hsl(var(--color-primary)); }
+  .status-border-ready    { border-right: 3px solid hsl(var(--color-status-success)); }
+  .status-border-delivering { border-right: 3px solid hsl(var(--color-status-info)); }
+  .status-border-delivered  { border-right: 3px solid hsl(var(--color-status-success) / 0.5); }
+  .status-border-cancelled  { border-right: 3px solid hsl(var(--color-status-error) / 0.5); }
+
+  /* Focus ring */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1;
   }
 }
