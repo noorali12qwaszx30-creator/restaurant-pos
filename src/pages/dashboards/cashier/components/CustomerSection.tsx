@@ -1,9 +1,8 @@
-import { useState, useRef, useEffect } from "react";
-import { Phone, User, MapPin, Check, ChevronDown, Clock } from "lucide-react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { Phone, User, MapPin, Check, ChevronDown, Clock, UserCheck, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MOCK_CUSTOMERS } from "@/data/mock-customers";
-import type { PreviousCustomer } from "@/data/mock-customers";
 import { DELIVERY_ZONES } from "@/data/mock-zones";
+import { useOrders } from "@/contexts/OrderContext";
 import { cn } from "@/lib/utils";
 
 export interface CustomerData {
@@ -11,6 +10,16 @@ export interface CustomerData {
   phone: string;
   address: string;
   zoneId?: string;
+}
+
+// Customer record derived from real past orders
+interface KnownCustomer {
+  name: string;
+  phone: string;
+  address: string;
+  zoneId?: string;
+  totalOrders: number;
+  lastOrderTotal: number;
 }
 
 interface Props {
@@ -22,10 +31,6 @@ interface Props {
 
 const PHONE_LENGTH = 11;
 
-function normalizeAr(s: string) {
-  return s.replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").toLowerCase().trim();
-}
-
 // Shared field height — all boxes equal
 const FIELD = cn(
   "w-full h-12 bg-surface-elevated border border-border rounded-xl px-3 text-sm text-text-primary",
@@ -35,20 +40,44 @@ const FIELD = cn(
 
 // ─────────────────────────────────────────────────────────────
 export function CustomerSection({ value, showAddress, onChange, onZoneFeeChange }: Props) {
-  const [nameSuggestions, setNameSuggestions] = useState<PreviousCustomer[]>([]);
-  const [phoneSuggestions, setPhoneSuggestions] = useState<PreviousCustomer[]>([]);
-  const [showNameDrop,  setShowNameDrop]  = useState(false);
-  const [showPhoneDrop, setShowPhoneDrop] = useState(false);
+  const { orders } = useOrders();
   const [showZoneDrop,  setShowZoneDrop]  = useState(false);
-  const [phoneDone, setPhoneDone] = useState(false);
+  const [phoneDone,     setPhoneDone]     = useState(false);
+  const [foundCustomer, setFoundCustomer] = useState<KnownCustomer | null>(null);
+  const [dismissed,     setDismissed]     = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // close dropdowns on outside click
+  // Build a lookup map: phone → KnownCustomer from real orders
+  const customerMap = useMemo(() => {
+    const map = new Map<string, KnownCustomer>();
+    for (const o of orders) {
+      const phone = o.customerPhone?.replace(/\D/g, "");
+      if (!phone || !o.customerName) continue;
+      const existing = map.get(phone);
+      if (existing) {
+        existing.totalOrders += 1;
+        // keep latest address/zone
+        if (o.deliveryAddress) existing.address = o.deliveryAddress;
+      } else {
+        // find zone by matching address name
+        const matchedZone = DELIVERY_ZONES.find(z => z.name === o.deliveryAddress);
+        map.set(phone, {
+          name: o.customerName,
+          phone,
+          address: o.deliveryAddress ?? "",
+          zoneId: matchedZone?.id,
+          totalOrders: 1,
+          lastOrderTotal: o.total,
+        });
+      }
+    }
+    return map;
+  }, [orders]);
+
+  // close zone dropdown on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (!containerRef.current?.contains(e.target as Node)) {
-        setShowNameDrop(false);
-        setShowPhoneDrop(false);
         setShowZoneDrop(false);
       }
     }
@@ -56,45 +85,54 @@ export function CustomerSection({ value, showAddress, onChange, onZoneFeeChange 
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // phone done animation
+  // phone done animation + customer lookup
   useEffect(() => {
-    if (value.phone.replace(/\D/g, "").length === PHONE_LENGTH) {
+    const digits = value.phone.replace(/\D/g, "");
+    const len = digits.length;
+
+    if (len === PHONE_LENGTH) {
       setPhoneDone(true);
       const t = setTimeout(() => setPhoneDone(false), 2000);
+
+      // Check real orders
+      const found = customerMap.get(digits);
+      if (found && !dismissed) {
+        setFoundCustomer(found);
+      } else if (!found) {
+        setFoundCustomer(null);
+      }
       return () => clearTimeout(t);
+    } else {
+      setFoundCustomer(null);
+      setDismissed(false);
     }
-  }, [value.phone]);
+  }, [value.phone, customerMap, dismissed]);
 
   /* ── handlers ── */
-  function handleNameChange(v: string) {
-    onChange({ name: v });
-    if (v.length >= 1) {
-      const q = normalizeAr(v);
-      const m = MOCK_CUSTOMERS.filter(c => normalizeAr(c.name).includes(q)).slice(0, 5);
-      setNameSuggestions(m);
-      setShowNameDrop(m.length > 0);
-    } else {
-      setShowNameDrop(false);
-    }
-  }
-
   function handlePhoneChange(raw: string) {
-    // digits only, max 11
     const digits = raw.replace(/\D/g, "").slice(0, PHONE_LENGTH);
     onChange({ phone: digits });
-    if (digits.length >= 4) {
-      const m = MOCK_CUSTOMERS.filter(c => c.phone.includes(digits)).slice(0, 5);
-      setPhoneSuggestions(m);
-      setShowPhoneDrop(m.length > 0);
-    } else {
-      setShowPhoneDrop(false);
-    }
   }
 
-  function selectCustomer(c: PreviousCustomer) {
-    onChange({ name: c.name, phone: c.phone, address: c.address ?? "" });
-    setShowNameDrop(false);
-    setShowPhoneDrop(false);
+  function applyFoundCustomer() {
+    if (!foundCustomer) return;
+    onChange({
+      name:    foundCustomer.name,
+      phone:   foundCustomer.phone,
+      address: foundCustomer.address,
+      zoneId:  foundCustomer.zoneId,
+    });
+    if (foundCustomer.zoneId) {
+      const zone = DELIVERY_ZONES.find(z => z.id === foundCustomer.zoneId);
+      if (zone) onZoneFeeChange?.(zone.fee);
+    }
+    setFoundCustomer(null);
+    setDismissed(true);
+  }
+
+  function dismissFound() {
+    setFoundCustomer(null);
+    setDismissed(true);
   }
 
   function selectZone(zoneId: string) {
@@ -110,50 +148,24 @@ export function CustomerSection({ value, showAddress, onChange, onZoneFeeChange 
   const phonePartial = phoneCount > 0 && !phoneValid;
   const selectedZone = DELIVERY_ZONES.find(z => z.id === value.zoneId);
 
-  /* ── suggestion dropdown ── */
-  function SuggestionDrop({ items, onSelect }: { items: PreviousCustomer[]; onSelect: (c: PreviousCustomer) => void }) {
-    return (
-      <div className="absolute top-full mt-1 inset-x-0 z-50 bg-surface border border-border rounded-xl shadow-elevated overflow-hidden">
-        {items.map(c => (
-          <button
-            key={c.id}
-            onMouseDown={e => { e.preventDefault(); onSelect(c); }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-surface-elevated text-start transition-colors border-b border-border last:border-0"
-          >
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <span className="text-xs font-bold text-primary">{c.name.charAt(0)}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-text-primary truncate">{c.name}</p>
-              <p className="text-xs text-text-muted" dir="ltr">{c.phone}</p>
-            </div>
-            <span className="text-xs text-text-muted shrink-0">{c.totalOrders} طلب</span>
-          </button>
-        ))}
-      </div>
-    );
-  }
-
   return (
     <div ref={containerRef} className="flex flex-col gap-2">
 
-      {/* ── Row 1: Name (full width) ── */}
+      {/* ── Row 1: Name ── */}
       <div className="relative">
         <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none z-10" />
         <input
           value={value.name}
-          onChange={e => handleNameChange(e.target.value)}
-          onFocus={() => value.name.length >= 1 && setShowNameDrop(nameSuggestions.length > 0)}
+          onChange={e => onChange({ name: e.target.value })}
           placeholder="اسم الزبون"
           className={cn(FIELD, "pr-9")}
           autoComplete="off"
         />
-        {showNameDrop && <SuggestionDrop items={nameSuggestions} onSelect={selectCustomer} />}
       </div>
 
-      {/* ── Row 2: Phone (full width) with live counter ── */}
+      {/* ── Row 2: Phone with live counter ── */}
       <div className="relative">
-        {/* left icon: changes to animated ✓ when done */}
+        {/* icon: ✓ when complete */}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none z-10">
           <AnimatePresence mode="wait">
             {phoneValid ? (
@@ -198,7 +210,6 @@ export function CustomerSection({ value, showAddress, onChange, onZoneFeeChange 
         <motion.input
           value={value.phone}
           onChange={e => handlePhoneChange(e.target.value)}
-          onFocus={() => phoneCount >= 4 && setShowPhoneDrop(phoneSuggestions.length > 0)}
           placeholder="رقم الهاتف (11 رقم)"
           inputMode="tel"
           dir="ltr"
@@ -207,28 +218,80 @@ export function CustomerSection({ value, showAddress, onChange, onZoneFeeChange 
           transition={{ duration: 0.3 }}
           className={cn(
             FIELD, "pr-9 text-right tracking-widest",
-            phoneCount > 0 && "pl-14",          // make room for counter
+            phoneCount > 0 && "pl-14",
             phoneValid && "border-status-success/50 focus:ring-status-success/20 focus:border-status-success",
             phonePartial && phoneCount > 3 && "border-status-warning/40"
           )}
           autoComplete="off"
         />
 
-        {/* progress bar under phone field */}
+        {/* progress bar */}
         <div className="absolute bottom-0 inset-x-3 h-[2px] rounded-full overflow-hidden bg-border/50">
           <motion.div
             className={cn(
-              "h-full rounded-full origin-left",
+              "h-full rounded-full",
               phoneValid ? "bg-status-success" : phoneCount > 7 ? "bg-status-warning" : "bg-primary/60"
             )}
             animate={{ scaleX: phoneCount / PHONE_LENGTH }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            style={{ transformOrigin: "right" }}    /* RTL: fill from right */
+            style={{ transformOrigin: "right" }}
           />
         </div>
-
-        {showPhoneDrop && <SuggestionDrop items={phoneSuggestions} onSelect={selectCustomer} />}
       </div>
+
+      {/* ── Found customer banner ── */}
+      <AnimatePresence>
+        {foundCustomer && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 400, damping: 26 }}
+            className="relative overflow-hidden rounded-2xl border border-primary/30 bg-primary/6 px-3 py-3 flex items-center gap-3"
+          >
+            {/* animated shimmer */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-l from-primary/8 via-transparent to-transparent pointer-events-none"
+              animate={{ x: ["100%", "-100%"] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
+            />
+
+            {/* avatar */}
+            <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+              <UserCheck className="w-5 h-5 text-primary" />
+            </div>
+
+            {/* info */}
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-bold text-primary uppercase tracking-wide mb-0.5">
+                زبون معروف · {foundCustomer.totalOrders} طلب سابق
+              </p>
+              <p className="text-sm font-semibold text-text-primary truncate">{foundCustomer.name}</p>
+              {foundCustomer.address && (
+                <p className="text-xs text-text-muted truncate">{foundCustomer.address}</p>
+              )}
+            </div>
+
+            {/* actions */}
+            <div className="flex flex-col gap-1.5 shrink-0">
+              <button
+                type="button"
+                onMouseDown={e => { e.preventDefault(); applyFoundCustomer(); }}
+                className="h-8 px-3 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors"
+              >
+                تعبئة تلقائية
+              </button>
+              <button
+                type="button"
+                onMouseDown={e => { e.preventDefault(); dismissFound(); }}
+                className="h-8 px-3 rounded-xl bg-border/60 text-text-muted text-xs font-medium hover:bg-border transition-colors flex items-center justify-center gap-1"
+              >
+                <X className="w-3 h-3" /> تجاهل
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Row 3: Zone selector (delivery only) ── */}
       {showAddress && (
@@ -302,7 +365,7 @@ export function CustomerSection({ value, showAddress, onChange, onZoneFeeChange 
 
       {/* Phone validation hint */}
       <AnimatePresence>
-        {phonePartial && phoneCount > 3 && (
+        {phonePartial && phoneCount > 3 && !foundCustomer && (
           <motion.p
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
