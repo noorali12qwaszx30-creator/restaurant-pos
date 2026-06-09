@@ -85,7 +85,7 @@ export function CustomerSection({ value, showAddress, onChange, onZoneFeeChange 
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // phone done animation + customer lookup
+  // phone done animation + live customer lookup on every digit
   useEffect(() => {
     const digits = value.phone.replace(/\D/g, "");
     const len = digits.length;
@@ -93,20 +93,27 @@ export function CustomerSection({ value, showAddress, onChange, onZoneFeeChange 
     if (len === PHONE_LENGTH) {
       setPhoneDone(true);
       const t = setTimeout(() => setPhoneDone(false), 2000);
-
-      // Check real orders
-      const found = customerMap.get(digits);
-      if (found && !dismissed) {
-        setFoundCustomer(found);
-      } else if (!found) {
-        setFoundCustomer(null);
-      }
       return () => clearTimeout(t);
-    } else {
-      setFoundCustomer(null);
-      setDismissed(false);
     }
+  }, [value.phone]);
+
+  useEffect(() => {
+    const digits = value.phone.replace(/\D/g, "");
+    if (dismissed) return;
+    if (digits.length < 4) { setFoundCustomer(null); return; }
+
+    // Live search: find first customer whose phone starts with typed digits
+    let match: KnownCustomer | null = null;
+    for (const [phone, c] of customerMap.entries()) {
+      if (phone.startsWith(digits)) { match = c; break; }
+    }
+    setFoundCustomer(match);
   }, [value.phone, customerMap, dismissed]);
+
+  // reset dismiss when phone field is cleared
+  useEffect(() => {
+    if (value.phone.length === 0) setDismissed(false);
+  }, [value.phone]);
 
   /* ── handlers ── */
   function handlePhoneChange(raw: string) {
