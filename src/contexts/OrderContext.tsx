@@ -140,10 +140,9 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // ── Load initial data ──
-  const loadOrders = useCallback(async () => {
-    setIsLoading(true);
-    setLoadError(null);
+  // ── Load orders (silent=true → no loading spinner, no error state) ──
+  const loadOrders = useCallback(async (silent = false) => {
+    if (!silent) { setIsLoading(true); setLoadError(null); }
     if (IS_DEV_MODE) {
       setOrders(MOCK_ORDERS.map(mockToLive));
     } else {
@@ -154,20 +153,20 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         console.error("[OrderContext] load failed:", err);
-        setLoadError(msg);
+        if (!silent) setLoadError(msg);
       }
     }
-    setIsLoading(false);
+    if (!silent) setIsLoading(false);
   }, []);
 
   useEffect(() => {
-    loadOrders();
+    loadOrders(false); // first load — show spinner
   }, [loadOrders]);
 
-  // ── Fallback polling every 30s (in case Realtime misses events) ──
+  // ── Silent background polling every 3s ──
   useEffect(() => {
     if (IS_DEV_MODE) return;
-    const id = setInterval(() => loadOrders(), 30_000);
+    const id = setInterval(() => loadOrders(true), 3_000);
     return () => clearInterval(id);
   }, [loadOrders]);
 
@@ -376,7 +375,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       orders, isLoading, loadError,
       addOrder, editOrder, markPreparing, markReady,
       assignAndDispatch, markDelivered, cancelOrder, reportIssue,
-      refetch: loadOrders,
+      refetch: () => loadOrders(true),
     }}>
       {children}
     </OrderContext.Provider>
