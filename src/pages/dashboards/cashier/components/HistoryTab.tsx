@@ -32,7 +32,7 @@ function HistoryCard({ order, onClick, completed }: { order: LiveOrder; onClick:
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-sm font-bold text-text-primary">{order.id}</span>
+          <span className="text-sm font-bold text-text-primary">#{order.orderNumber ?? order.id.slice(0,6)}</span>
           <OrderTypeBadge type={order.type} />
         </div>
         {order.customerName && (

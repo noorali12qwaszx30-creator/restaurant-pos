@@ -54,7 +54,7 @@ function ActiveOrderCard({ order, onClick }: { order: LiveOrder; onClick: () => 
       {/* Header */}
       <div className={cn("flex items-center justify-between px-3 py-2.5", currentStep?.bg ?? "bg-surface-elevated")}>
         <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-text-primary">{order.id}</span>
+          <span className="text-sm font-bold text-text-primary">#{order.orderNumber ?? order.id.slice(0,6)}</span>
           <StatusBadge status={order.status} />
         </div>
         <div className="flex items-center gap-1.5">

@@ -24,7 +24,7 @@ export function AvailableOrdersTab() {
           <div key={order.id} className="bg-surface border border-border rounded-2xl p-4 flex flex-col gap-3">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-bold text-text-primary">{order.id}</p>
+                <p className="text-sm font-bold text-text-primary">#{order.orderNumber ?? order.id.slice(0,6)}</p>
                 <p className="text-xs text-text-muted">{order.customerName}</p>
               </div>
               <div className="flex flex-col items-end gap-1">

@@ -22,7 +22,7 @@ export function MyOrdersTab({ driverId }: { driverId: string }) {
     <div className="bg-surface border border-border rounded-2xl p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-bold text-text-primary">{order.id}</p>
+          <p className="text-sm font-bold text-text-primary">#{order.orderNumber ?? order.id.slice(0,6)}</p>
           <p className="text-xs text-text-muted mt-0.5">{order.customerName}</p>
         </div>
         <StatusBadge status={order.status} />

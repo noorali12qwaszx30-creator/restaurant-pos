@@ -18,6 +18,7 @@ interface OrderDetailDialogProps {
     total: number;
     createdAt: Date;
     tableNumber?: number;
+    orderNumber?: number;
   } | null;
   onClose: () => void;
   extraActions?: React.ReactNode;
@@ -31,7 +32,7 @@ export function OrderDetailDialog({ order, onClose, extraActions }: OrderDetailD
       <DialogContent>
         <DialogHeader onClose={onClose}>
           <div className="flex items-center gap-2 flex-wrap">
-            <DialogTitle>{order.id}</DialogTitle>
+            <DialogTitle>طلب #{order.orderNumber ?? order.id.slice(0,6)}</DialogTitle>
             <StatusBadge status={order.status} />
             <OrderTypeBadge type={order.type} />
           </div>

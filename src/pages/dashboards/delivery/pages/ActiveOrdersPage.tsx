@@ -106,7 +106,7 @@ function ActiveOrderCard({ order, onDeliver, onIssue }: {
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-base font-bold text-text-primary">{order.id}</span>
+            <span className="text-base font-bold text-text-primary">#{order.orderNumber ?? order.id.slice(0,6)}</span>
             <DelayIndicator since={since} />
             {order.hasIssue && (
               <span className="text-[10px] font-bold bg-status-warning/10 text-status-warning border border-status-warning/25 rounded-full px-1.5 py-0.5 flex items-center gap-1">

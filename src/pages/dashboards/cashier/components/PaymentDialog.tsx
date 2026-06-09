@@ -43,7 +43,7 @@ export function PaymentDialog({ order, onClose, onConfirm }: PaymentDialogProps)
     <Dialog open={!!order} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader onClose={onClose}>
-          <DialogTitle>تسوية الدفع — {order.id}</DialogTitle>
+          <DialogTitle>تسوية الدفع — #{order.orderNumber ?? order.id.slice(0,6)}</DialogTitle>
         </DialogHeader>
 
         <DialogBody className="flex flex-col gap-5">

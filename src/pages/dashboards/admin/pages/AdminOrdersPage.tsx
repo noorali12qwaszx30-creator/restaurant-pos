@@ -107,7 +107,7 @@ function AdminOrderCard({ order }: { order: LiveOrder }) {
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-bold text-text-primary">{order.id}</span>
+            <span className="text-sm font-bold text-text-primary">#{order.orderNumber ?? order.id.slice(0,6)}</span>
             <StatusBadge status={order.status} />
             <span className="flex items-center gap-1 text-[10px] text-text-muted bg-surface-elevated rounded-full px-1.5 py-0.5 border border-border">
               <TypeIcon className="w-2.5 h-2.5" />
