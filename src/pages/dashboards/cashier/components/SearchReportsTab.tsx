@@ -141,26 +141,39 @@ export function SearchReportsTab() {
             <button
               key={o.id}
               onClick={() => setSelected(o)}
-              className="w-full text-start bg-surface border border-border rounded-2xl p-3 flex items-center gap-3 hover:bg-surface-elevated transition-all active:scale-[0.99]"
+              className="w-full text-start bg-surface border border-border rounded-2xl p-3 hover:bg-surface-elevated transition-all active:scale-[0.99]"
             >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap mb-1">
+              {/* Header */}
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-primary/10 text-primary text-sm font-bold num shrink-0">
                     {o.orderNumber ?? o.id.slice(0, 4)}
                   </span>
                   <StatusBadge status={o.status} />
                   <OrderTypeBadge type={o.type} />
                 </div>
-                {o.customerName && (
-                  <p className="text-xs text-text-muted truncate">{o.customerName} · {o.customerPhone}</p>
-                )}
-                <p className="text-xs text-text-muted line-clamp-1">
-                  {o.items.map((i) => i.name).join(" · ")}
-                </p>
+                <div className="shrink-0 text-start flex flex-col items-end gap-0.5">
+                  <span className="text-sm font-bold text-primary">{o.total.toFixed(1)} د.ع</span>
+                  <span className="text-xs text-text-muted">{timeAgo(o.createdAt)}</span>
+                </div>
               </div>
-              <div className="shrink-0 text-left flex flex-col items-end gap-0.5">
-                <span className="text-sm font-bold text-primary">{o.total.toFixed(1)} د.ع</span>
-                <span className="text-xs text-text-muted">{timeAgo(o.createdAt)}</span>
+              {o.customerName && (
+                <p className="text-xs text-text-muted mb-1.5">{o.customerName} · {o.customerPhone}</p>
+              )}
+              {/* Items rows */}
+              <div className="flex flex-col gap-0.5">
+                {o.items.slice(0, 5).map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between gap-2 py-0.5 border-b border-border/40 last:border-0">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="w-4 h-4 rounded bg-primary/10 text-primary text-[9px] font-bold flex items-center justify-center shrink-0 num">{item.quantity}</span>
+                      <span className="text-xs text-text-secondary truncate">{item.name}</span>
+                    </div>
+                    <span className="text-xs font-semibold text-text-primary num shrink-0">{(item.unitPrice * item.quantity).toFixed(0)} د.ع</span>
+                  </div>
+                ))}
+                {o.items.length > 5 && (
+                  <p className="text-[10px] text-text-muted text-center pt-0.5">+{o.items.length - 5} أصناف أخرى</p>
+                )}
               </div>
             </button>
           ))

@@ -70,15 +70,32 @@ export function OrderCard({ order, onClick, compact = false }: OrderCardProps) {
         )}
       </div>
 
-      {/* Items summary */}
-      {!compact && (
-        <p className="text-[11px] text-text-muted mb-2.5 leading-relaxed line-clamp-1">
-          {order.items.map((i) => `${i.name} ×${i.quantity}`).join(" · ")}
-        </p>
+      {/* Items list — up to 5 rows */}
+      {!compact && order.items.length > 0 && (
+        <div className="mb-2.5 flex flex-col gap-1">
+          {order.items.slice(0, 5).map((item, idx) => (
+            <div key={idx} className="flex items-center justify-between gap-2 py-1 border-b border-border/50 last:border-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center shrink-0 num">
+                  {item.quantity}
+                </span>
+                <span className="text-xs text-text-secondary truncate">{item.name}</span>
+              </div>
+              <span className="text-xs font-semibold text-text-primary num shrink-0">
+                {(item.unitPrice * item.quantity).toFixed(0)} د.ع
+              </span>
+            </div>
+          ))}
+          {order.items.length > 5 && (
+            <p className="text-[10px] text-text-muted text-center pt-0.5">
+              +{order.items.length - 5} أصناف أخرى
+            </p>
+          )}
+        </div>
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pt-1">
         <span className="text-[11px] text-text-muted bg-surface-elevated rounded-lg px-2 py-0.5 border border-border">
           {order.items.length} صنف
         </span>

@@ -53,9 +53,20 @@ export function TakeawayQueueTab() {
           )}
         </div>
       )}
-      <p className="text-xs text-text-secondary">
-        {order.items.map((i) => `${i.name} ×${i.quantity}`).join(" · ")}
-      </p>
+      <div className="flex flex-col gap-0.5">
+        {order.items.slice(0, 5).map((item, idx) => (
+          <div key={idx} className="flex items-center justify-between gap-2 py-0.5 border-b border-border/40 last:border-0">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="w-4 h-4 rounded bg-primary/10 text-primary text-[9px] font-bold flex items-center justify-center shrink-0 num">{item.quantity}</span>
+              <span className="text-xs text-text-secondary truncate">{item.name}</span>
+            </div>
+            <span className="text-xs font-semibold text-text-primary num shrink-0">{(item.unitPrice * item.quantity).toFixed(0)} د.ع</span>
+          </div>
+        ))}
+        {order.items.length > 5 && (
+          <p className="text-[10px] text-text-muted text-center pt-0.5">+{order.items.length - 5} أصناف أخرى</p>
+        )}
+      </div>
       <div className="flex justify-between items-center">
         <span className="text-xs text-text-muted flex items-center gap-1">
           <Clock className="w-3 h-3" />{timeAgo(order.createdAt)}

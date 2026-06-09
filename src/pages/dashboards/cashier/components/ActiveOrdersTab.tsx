@@ -84,10 +84,25 @@ function ActiveOrderCard({ order, onClick }: { order: LiveOrder; onClick: () => 
           )}
         </div>
 
-        {/* Items */}
-        <p className="text-xs text-text-muted line-clamp-1">
-          {order.items.map((i) => `${i.name} ×${i.quantity}`).join(" · ")}
-        </p>
+        {/* Items — up to 5 rows */}
+        <div className="flex flex-col gap-0.5">
+          {order.items.slice(0, 5).map((item, idx) => (
+            <div key={idx} className="flex items-center justify-between gap-2 py-0.5 border-b border-border/40 last:border-0">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="w-4 h-4 rounded bg-primary/10 text-primary text-[9px] font-bold flex items-center justify-center shrink-0 num">
+                  {item.quantity}
+                </span>
+                <span className="text-[11px] text-text-secondary truncate">{item.name}</span>
+              </div>
+              <span className="text-[11px] font-semibold text-text-primary num shrink-0">
+                {(item.unitPrice * item.quantity).toFixed(0)} د.ع
+              </span>
+            </div>
+          ))}
+          {order.items.length > 5 && (
+            <p className="text-[10px] text-text-muted text-center pt-0.5">+{order.items.length - 5} أصناف أخرى</p>
+          )}
+        </div>
 
         {/* Delivery address */}
         {order.deliveryAddress && (

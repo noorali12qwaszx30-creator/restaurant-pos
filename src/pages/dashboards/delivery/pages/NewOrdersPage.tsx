@@ -81,8 +81,19 @@ function NewOrderCard({ order }: { order: LiveOrder }) {
         )}
 
         {/* Items */}
-        <div className="bg-surface-elevated rounded-xl px-3 py-2.5 border border-border/50 text-xs text-text-muted leading-relaxed">
-          {order.items.map(i => `${i.name} ×${i.quantity}`).join(" · ")}
+        <div className="bg-surface-elevated rounded-xl px-3 py-2 border border-border/50 flex flex-col gap-0.5">
+          {order.items.slice(0, 5).map((item, idx) => (
+            <div key={idx} className="flex items-center justify-between gap-2 py-1 border-b border-border/40 last:border-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center shrink-0 num">{item.quantity}</span>
+                <span className="text-xs text-text-secondary truncate">{item.name}</span>
+              </div>
+              <span className="text-xs font-semibold text-text-primary num shrink-0">{(item.unitPrice * item.quantity).toFixed(0)} د.ع</span>
+            </div>
+          ))}
+          {order.items.length > 5 && (
+            <p className="text-[10px] text-text-muted text-center pt-0.5">+{order.items.length - 5} أصناف أخرى</p>
+          )}
         </div>
 
         {/* Notes */}
