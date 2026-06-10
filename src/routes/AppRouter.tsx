@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute, PublicOnlyRoute } from "./ProtectedRoute";
+import { OrderNotificationBridge } from "@/components/notifications/OrderNotificationBridge";
 import { LoginPage } from "@/pages/auth/LoginPage";
 import { RoleSelectorPage } from "@/pages/role-selector/RoleSelectorPage";
 import { CashierDashboard } from "@/pages/dashboards/cashier/CashierDashboard";
@@ -11,6 +12,8 @@ import { AdminDashboard } from "@/pages/dashboards/admin/AdminDashboard";
 
 export function AppRouter() {
   return (
+    <>
+    <OrderNotificationBridge />
     <Routes>
       {/* Default redirect */}
       <Route path="/" element={<Navigate to="/login" replace />} />
@@ -48,5 +51,6 @@ export function AppRouter() {
       {/* 404 */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+    </>
   );
 }

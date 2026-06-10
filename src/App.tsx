@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OrderProvider } from "@/contexts/OrderContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
+import { NotifyProvider } from "@/components/notifications/NotificationContext";
 import { AppRouter } from "@/routes/AppRouter";
 
 const queryClient = new QueryClient({
@@ -21,7 +22,9 @@ export default function App() {
         <AuthProvider>
           <SettingsProvider>
             <OrderProvider>
-              <AppRouter />
+              <NotifyProvider>
+                <AppRouter />
+              </NotifyProvider>
             </OrderProvider>
           </SettingsProvider>
         </AuthProvider>
