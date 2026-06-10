@@ -12,6 +12,7 @@ import { ProductGrid } from "./ProductGrid";
 import { getZoneById } from "@/data/mock-zones";
 import { useOrders, type LiveOrder } from "@/contexts/OrderContext";
 import { cn } from "@/lib/utils";
+import { useNotify } from "@/components/notifications/NotificationContext";
 import type { CartItem } from "../hooks/useCart";
 
 
@@ -92,6 +93,7 @@ interface Props {
 
 export function EditOrderDialog({ order, onClose }: Props) {
   const { editOrder } = useOrders();
+  const { notify } = useNotify();
 
   // ── local state ──────────────────────────────────
   const [customer, setCustomer] = useState<CustomerData>({ name: "", phone: "", address: "" });
@@ -155,7 +157,7 @@ export function EditOrderDialog({ order, onClose }: Props) {
 
   // ── save ─────────────────────────────────────────
   async function handleSave() {
-    if (cartItems.length === 0) { alert("أضف صنفاً واحداً على الأقل"); return; }
+    if (cartItems.length === 0) { notify({ type: "warning", title: "السلة فارغة", message: "أضف صنفاً واحداً على الأقل" }); return; }
     setIsSaving(true);
     try {
       await editOrder(order!.id, {
@@ -174,7 +176,7 @@ export function EditOrderDialog({ order, onClose }: Props) {
       setSaved(true);
       setTimeout(onClose, 900);
     } catch {
-      alert("فشل الحفظ. تحقق من الاتصال.");
+      notify({ type: "error", title: "فشل الحفظ", message: "تحقق من الاتصال وحاول مجدداً" });
     } finally {
       setIsSaving(false);
     }

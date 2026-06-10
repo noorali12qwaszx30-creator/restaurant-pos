@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Plus, Edit2, ToggleLeft, ToggleRight, Search, X,
   ShieldCheck, Loader2, Trash2, Phone, User,
-  CheckCircle2, AlertCircle, RefreshCw, KeyRound, Eye, EyeOff,
+  RefreshCw, KeyRound, Eye, EyeOff,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 const db = supabase as any;
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useNotify } from "@/components/notifications/NotificationContext";
 import type { UserRole } from "@/types";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -61,22 +62,6 @@ function Avatar({ name, role }: { name: string; role: UserRole }) {
   );
 }
 
-// ── Toast ──────────────────────────────────────────────────────
-function Toast({ msg, type }: { msg: string; type: "success" | "error" }) {
-  return (
-    <div className={cn(
-      "fixed top-16 inset-x-4 z-[300] flex items-center gap-3 rounded-2xl px-4 py-3 shadow-elevated text-white text-sm font-medium",
-      type === "success" ? "bg-status-success" : "bg-status-error"
-    )}>
-      {type === "success"
-        ? <CheckCircle2 className="w-4 h-4 shrink-0" />
-        : <AlertCircle className="w-4 h-4 shrink-0" />
-      }
-      {msg}
-    </div>
-  );
-}
-
 // ══════════════════════════════════════════════════════════════
 // Main Page
 // ══════════════════════════════════════════════════════════════
@@ -86,10 +71,10 @@ export function AdminUsersPage() {
   const [search,    setSearch]    = useState("");
   const [filterRole, setFilterRole] = useState<UserRole | "all">("all");
 
+  const { notify } = useNotify();
   const [addOpen,    setAddOpen]    = useState(false);
   const [editUser,   setEditUser]   = useState<StaffProfile | null>(null);
   const [resetUser,  setResetUser]  = useState<StaffProfile | null>(null);
-  const [toast,      setToast]      = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
   // ── Load ──
   const loadUsers = useCallback(async () => {
@@ -104,12 +89,6 @@ export function AdminUsersPage() {
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
 
-  // ── Toast helper ──
-  function showToast(msg: string, type: "success" | "error" = "success") {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
-  }
-
   // ── Toggle active ──
   async function toggleActive(user: StaffProfile) {
     const next = !user.is_active;
@@ -117,9 +96,9 @@ export function AdminUsersPage() {
     const { error } = await db.from("profiles").update({ is_active: next }).eq("id", user.id);
     if (error) {
       setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_active: user.is_active } : u));
-      showToast("فشل تغيير حالة المستخدم", "error");
+      notify({ type: "error", title: "فشل التحديث", message: "فشل تغيير حالة المستخدم" });
     } else {
-      showToast(next ? "تم تفعيل الحساب" : "تم تعطيل الحساب");
+      notify({ type: "success", title: next ? "تم التفعيل" : "تم التعطيل", message: user.display_name });
     }
   }
 
@@ -139,7 +118,6 @@ export function AdminUsersPage() {
 
   return (
     <div className="flex flex-col min-h-full pb-28">
-      {toast && <Toast msg={toast.msg} type={toast.type} />}
 
       {/* ── Header ── */}
       <div className="sticky top-[var(--header-height)] z-20 bg-background border-b border-border px-4 py-3 flex flex-col gap-3">
@@ -295,8 +273,8 @@ export function AdminUsersPage() {
       <AddUserDialog
         open={addOpen}
         onClose={() => setAddOpen(false)}
-        onSuccess={(msg) => { showToast(msg); loadUsers(); setAddOpen(false); }}
-        onError={(msg) => showToast(msg, "error")}
+        onSuccess={(msg) => { notify({ type: "success", title: "تم إنشاء الحساب", message: msg }); loadUsers(); setAddOpen(false); }}
+        onError={(msg) => notify({ type: "error", title: "فشل الإنشاء", message: msg })}
       />
 
       {/* ── Edit Dialog ── */}
@@ -304,8 +282,8 @@ export function AdminUsersPage() {
         <EditUserDialog
           user={editUser}
           onClose={() => setEditUser(null)}
-          onSuccess={(msg) => { showToast(msg); loadUsers(); setEditUser(null); }}
-          onError={(msg) => showToast(msg, "error")}
+          onSuccess={(msg) => { notify({ type: "success", title: "تم التعديل", message: msg }); loadUsers(); setEditUser(null); }}
+          onError={(msg) => notify({ type: "error", title: "فشل التعديل", message: msg })}
         />
       )}
 
@@ -314,8 +292,8 @@ export function AdminUsersPage() {
         <ResetPasswordDialog
           user={resetUser}
           onClose={() => setResetUser(null)}
-          onSuccess={(msg) => { showToast(msg); setResetUser(null); }}
-          onError={(msg) => showToast(msg, "error")}
+          onSuccess={(msg) => { notify({ type: "success", title: "تم إعادة التعيين", message: msg }); setResetUser(null); }}
+          onError={(msg) => notify({ type: "error", title: "فشل", message: msg })}
         />
       )}
     </div>

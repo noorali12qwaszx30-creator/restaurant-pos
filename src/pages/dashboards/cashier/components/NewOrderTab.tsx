@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Search, X, ShoppingCart, CheckCircle2, Trash2, MessageSquare, Plus, Minus, FileText, Check } from "lucide-react";
+import { Search, X, ShoppingCart, Trash2, MessageSquare, Plus, Minus, FileText, Check } from "lucide-react";
+import { useNotify } from "@/components/notifications/NotificationContext";
 import { useCart } from "../hooks/useCart";
 import { CustomerSection } from "./CustomerSection";
 import { OrderTypeSelector, type PosOrderType } from "./OrderTypeSelector";
@@ -102,7 +103,7 @@ function InlineCartItem({
 export function NewOrderTab() {
   const cart = useCart();
   const { addOrder } = useOrders();
-
+  const { notify } = useNotify();
   const { profile } = useAuth();
 
   const [customer, setCustomer] = useState<CustomerData>({ name: "", phone: "", address: "" });
@@ -113,7 +114,6 @@ export function NewOrderTab() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [largeOrderOpen, setLargeOrderOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successId, setSuccessId] = useState<string | null>(null);
 
   const search = useDebounce(searchRaw, 200);
 
@@ -134,7 +134,7 @@ export function NewOrderTab() {
 
   function handleSubmitClick() {
     const err = validate();
-    if (err) { alert(err); return; }
+    if (err) { notify({ type: "warning", title: "تحقق من البيانات", message: err, duration: 3500 }); return; }
     if (total > LARGE_ORDER_TOTAL || cart.itemCount > LARGE_ORDER_ITEMS) {
       setLargeOrderOpen(true);
     } else {
@@ -151,7 +151,7 @@ export function NewOrderTab() {
   async function doSubmit() {
     setIsSubmitting(true);
     try {
-      const id = await addOrder({
+      await addOrder({
         type: orderType as "delivery" | "takeaway" | "pickup",
         source: mapSource(orderSource),
         paymentMethod: "cash",
@@ -175,7 +175,6 @@ export function NewOrderTab() {
           notes: i.notes || undefined,
         })),
       });
-      setSuccessId(id);
       cart.clearCart();
       setCustomer({ name: "", phone: "", address: "", zoneId: undefined });
       setOrderType("delivery");
@@ -183,10 +182,9 @@ export function NewOrderTab() {
       setZoneId("");
       setSearchRaw("");
       setActiveCategory("all");
-      setTimeout(() => setSuccessId(null), 3000);
     } catch (err) {
       console.error("[Cashier] createOrder failed:", err);
-      alert("فشل إنشاء الطلب. تحقق من الاتصال.");
+      notify({ type: "error", title: "فشل الإرسال", message: "تحقق من الاتصال وحاول مجدداً" });
     } finally {
       setIsSubmitting(false);
     }
@@ -194,17 +192,6 @@ export function NewOrderTab() {
 
   return (
     <div className="flex flex-col">
-
-      {/* ── Success toast ── */}
-      {successId && (
-        <div className="fixed top-[calc(var(--header-height)+8px)] inset-x-4 z-[200] flex items-center gap-3 bg-status-success text-white rounded-2xl px-4 py-3 shadow-elevated">
-          <CheckCircle2 className="w-5 h-5 shrink-0" />
-          <div>
-            <p className="font-semibold text-sm">تم إنشاء الطلب بنجاح</p>
-            <p className="text-xs opacity-80">{successId}</p>
-          </div>
-        </div>
-      )}
 
       {/* ══ 1. نوع الطلب ══ */}
       <section className="px-4 pt-4 pb-4 border-b border-border/60 bg-surface">

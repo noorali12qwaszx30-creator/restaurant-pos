@@ -4,14 +4,15 @@
  */
 import { useState, useEffect } from "react";
 import {
-  Search, X, ShoppingBag, CheckCircle2,
-  Trash2, MessageSquare, Plus, Minus, FileText, ChevronDown, Sparkles,
+  Search, X, ShoppingBag,
+  Trash2, MessageSquare, Plus, Minus, FileText, ChevronDown,
 } from "lucide-react";
 import { useCart } from "../../cashier/hooks/useCart";
 import { CategoryBar } from "../../cashier/components/CategoryBar";
 import { ProductGrid } from "../../cashier/components/ProductGrid";
 import { useOrders } from "@/contexts/OrderContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotify } from "@/components/notifications/NotificationContext";
 import { cn } from "@/lib/utils";
 import type { CartItem } from "../../cashier/hooks/useCart";
 
@@ -116,12 +117,12 @@ export function TakeawayMenuPage() {
   const cart = useCart();
   const { addOrder } = useOrders();
   const { profile } = useAuth();
+  const { notify } = useNotify();
 
   const [searchRaw, setSearchRaw]     = useState("");
   const [activeCategory, setCategory] = useState("all");
   const [cartOpen, setCartOpen]       = useState(false);
   const [isSubmitting, setSubmitting] = useState(false);
-  const [successNum, setSuccessNum]   = useState<number | null>(null);
   const [orderNote, setOrderNote]     = useState("");
   const [noteOpen, setNoteOpen]       = useState(false);
 
@@ -150,18 +151,15 @@ export function TakeawayMenuPage() {
           notes:      i.notes || undefined,
         })),
       });
-      const num = cart.itemCount;
       cart.clearCart();
       setOrderNote("");
       setNoteOpen(false);
       setCartOpen(false);
       setCategory("all");
       setSearchRaw("");
-      setSuccessNum(num);
-      setTimeout(() => setSuccessNum(null), 3500);
     } catch (err) {
       console.error("[Takeaway] createOrder failed:", err);
-      alert("فشل إنشاء الطلب. تحقق من الاتصال.");
+      notify({ type: "error", title: "فشل الإرسال", message: "تحقق من الاتصال وحاول مجدداً" });
     } finally {
       setSubmitting(false);
     }
@@ -169,24 +167,6 @@ export function TakeawayMenuPage() {
 
   return (
     <div className="flex flex-col min-h-full bg-background">
-
-      {/* ── Success toast ── */}
-      {successNum !== null && (
-        <div className="fixed top-[calc(var(--header-height,56px)+12px)] inset-x-4 z-[200]
-          flex items-center gap-3 px-4 py-3.5 rounded-3xl
-          bg-gradient-to-l from-emerald-500 to-green-600
-          text-white shadow-[0_8px_32px_rgba(16,185,129,0.40)]
-          animate-in slide-in-from-top-3 duration-300">
-          <div className="w-9 h-9 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
-            <CheckCircle2 className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-bold leading-tight">تم إرسال الطلب!</p>
-            <p className="text-xs opacity-80 mt-0.5">{successNum} صنف · سفري</p>
-          </div>
-          <Sparkles className="w-4 h-4 opacity-60" />
-        </div>
-      )}
 
       {/* ── Search bar ── */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border/40 px-4 py-3">
