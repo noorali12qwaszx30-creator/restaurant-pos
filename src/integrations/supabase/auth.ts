@@ -66,6 +66,17 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
 export function onAuthStateChanged(
   callback: (profile: UserProfile | null) => void
 ): () => void {
+  // 1. Resolve immediately from the stored session (no network call)
+  supabase.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session?.user) {
+      callback(null);
+      return;
+    }
+    const profile = await getCurrentProfile();
+    callback(profile);
+  });
+
+  // 2. Keep listening for future changes (sign-in, sign-out, refresh)
   const { data: { subscription } } = supabase.auth.onAuthStateChange(
     async (_event, session) => {
       if (!session?.user) {

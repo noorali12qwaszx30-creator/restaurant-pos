@@ -55,8 +55,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // ── Production: Supabase Auth observer ──
     let unsubscribe: (() => void) | undefined;
+
+    // Safety timeout — if auth doesn't resolve in 6s, stop loading
+    const timeout = setTimeout(() => {
+      setState(prev => prev.isLoading ? { ...prev, isLoading: false } : prev);
+    }, 6000);
+
     try {
       unsubscribe = onAuthStateChanged((profile) => {
+        clearTimeout(timeout);
         setState({
           profile,
           activeRole: profile?.roles[0] ?? null,
@@ -66,11 +73,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       });
     } catch (err: unknown) {
+      clearTimeout(timeout);
       const msg = err instanceof Error ? err.message : String(err);
       setState((prev) => ({ ...prev, isLoading: false, configError: msg }));
     }
 
-    return () => unsubscribe?.();
+    return () => { unsubscribe?.(); clearTimeout(timeout); };
   }, []);
 
   const notifyLogin = (profile: UserProfile, role?: UserRole) => {
