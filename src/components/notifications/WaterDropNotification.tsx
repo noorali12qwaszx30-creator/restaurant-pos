@@ -61,7 +61,7 @@ export function WaterDropNotification({ toast, onDone, index }: Props) {
 
     const dur = toast.duration ?? 4000;
     autoRef.current = setTimeout(() => setPhase("dissolve"), T_DROP + T_SPLASH + T_EXPAND + dur);
-    const t5 = setTimeout(() => { setPhase("done"); onDone(toast.id); }, T_DROP + T_SPLASH + T_EXPAND + dur + 450);
+    const t5 = setTimeout(() => { setPhase("done"); onDone(toast.id); }, T_DROP + T_SPLASH + T_EXPAND + dur + 200);
 
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(autoRef.current); clearTimeout(t5); };
   }, [toast.id, toast.duration, onDone]);
@@ -69,7 +69,7 @@ export function WaterDropNotification({ toast, onDone, index }: Props) {
   function dismiss() {
     clearTimeout(autoRef.current);
     setPhase("dissolve");
-    setTimeout(() => { setPhase("done"); onDone(toast.id); }, 450);
+    setTimeout(() => { setPhase("done"); onDone(toast.id); }, 200);
   }
 
   if (phase === "done") return null;
@@ -138,8 +138,8 @@ export function WaterDropNotification({ toast, onDone, index }: Props) {
             initial={{ scaleX: 0.08, scaleY: 0.08, opacity: 0, y: 38 }}
             animate={{ scaleX: 1, scaleY: 1, opacity: 1, y: 0 }}
             exit={{
-              scaleX: 0.06, scaleY: 0.3, opacity: 0, y: 20, filter: "blur(4px)",
-              transition: { duration: 0.42, ease: [0.4, 0, 1, 1] },
+              opacity: 0,
+              transition: { duration: 0.15, ease: "easeOut" },
             }}
             transition={{ duration: T_EXPAND / 1000, ease: [0.34, 1.28, 0.64, 1] }}
             onClick={dismiss}
@@ -149,22 +149,15 @@ export function WaterDropNotification({ toast, onDone, index }: Props) {
         )}
       </AnimatePresence>
 
-      {/* ── DISSOLVE ── */}
+      {/* ── DISSOLVE — fade in place ── */}
       <AnimatePresence>
         {phase === "dissolve" && (
           <motion.div
             key="dissolve"
             className="pointer-events-none"
-            style={{ originX: 0.5, originY: 0 }}
-            initial={{ scaleX: 1, scaleY: 1, opacity: 1, y: 0, filter: "blur(0px)" }}
-            animate={{
-              scaleX: [1, 0.5, 0.12],
-              scaleY: [1, 1.05, 0.3],
-              opacity: [1, 0.6, 0],
-              y: [0, -10, -26],
-              filter: ["blur(0px)", "blur(2px)", "blur(6px)"],
-            }}
-            transition={{ duration: 0.42, ease: [0.4, 0, 1, 1] }}
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
           >
             <Card toast={toast} theme={theme} Icon={Icon} show onDismiss={() => {}} />
           </motion.div>
