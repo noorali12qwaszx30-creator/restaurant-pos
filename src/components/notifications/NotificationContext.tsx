@@ -40,8 +40,8 @@ let _counter = 0;
 
 export function NotifyProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<WaterDropToast[]>([]);
-  // Keep max 3 visible at once — newest on top
-  const MAX = 3;
+  // Only 1 notification at a time — new one replaces the old
+  const MAX = 1;
 
   const notify = useCallback((opts: NotifyOptions): string => {
     const id = `wdn-${++_counter}`;
