@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Phone, User, MapPin, Check, ChevronDown, Clock, UserCheck, X } from "lucide-react";
+import { Phone, User, MapPin, Check, ChevronDown, UserCheck, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { DELIVERY_ZONES } from "@/data/mock-zones";
+import { useSettings } from "@/contexts/SettingsContext";
 import { useOrders } from "@/contexts/OrderContext";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +41,7 @@ const FIELD = cn(
 // ─────────────────────────────────────────────────────────────
 export function CustomerSection({ value, showAddress, onChange, onZoneFeeChange }: Props) {
   const { orders } = useOrders();
+  const { zones: DELIVERY_ZONES } = useSettings();
   const [showZoneDrop,  setShowZoneDrop]  = useState(false);
   const [phoneDone,     setPhoneDone]     = useState(false);
   const [foundCustomer, setFoundCustomer] = useState<KnownCustomer | null>(null);
@@ -354,10 +355,6 @@ export function CustomerSection({ value, showAddress, onChange, onZoneFeeChange 
                       <span className="text-sm font-medium">{zone.name}</span>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
-                      <span className="flex items-center gap-1 text-xs text-text-muted">
-                        <Clock className="w-3 h-3" />
-                        {zone.estimatedMinutes} د
-                      </span>
                       <span className="text-xs font-bold text-primary bg-primary/10 rounded-lg px-2 py-0.5">
                         {zone.fee.toLocaleString("ar-IQ")} د.ع
                       </span>

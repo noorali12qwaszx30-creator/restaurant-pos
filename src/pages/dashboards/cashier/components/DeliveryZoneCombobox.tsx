@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { MapPin, ChevronDown, Clock } from "lucide-react";
-import { DELIVERY_ZONES, RECENT_ZONE_IDS, getZoneById } from "@/data/mock-zones";
+import { MapPin, ChevronDown } from "lucide-react";
+import { useSettings } from "@/contexts/SettingsContext";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -13,11 +13,13 @@ function normalizeAr(s: string) {
 }
 
 export function DeliveryZoneCombobox({ value, onChange }: Props) {
+  const { zones } = useSettings();
+  const activeZones = zones.filter(z => z.is_active);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const selected = getZoneById(value);
+  const selected = activeZones.find(z => z.id === value);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -31,10 +33,9 @@ export function DeliveryZoneCombobox({ value, onChange }: Props) {
     if (open) setTimeout(() => inputRef.current?.focus(), 50);
   }, [open]);
 
-  const recentZones = RECENT_ZONE_IDS.map((id) => getZoneById(id)).filter(Boolean) as typeof DELIVERY_ZONES;
   const filtered = search
-    ? DELIVERY_ZONES.filter((z) => normalizeAr(z.name).includes(normalizeAr(search)))
-    : DELIVERY_ZONES;
+    ? activeZones.filter((z) => normalizeAr(z.name).includes(normalizeAr(search)))
+    : activeZones;
 
   function handleSelect(id: string) {
     onChange(id);
@@ -77,20 +78,6 @@ export function DeliveryZoneCombobox({ value, onChange }: Props) {
           </div>
 
           <div className="max-h-52 overflow-y-auto">
-            {/* Recent zones */}
-            {!search && (
-              <>
-                <div className="px-3 py-1.5 flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-text-muted" />
-                  <span className="text-xs text-text-muted">مستخدمة مؤخراً</span>
-                </div>
-                {recentZones.map((z) => (
-                  <ZoneRow key={z.id} zone={z} selected={value === z.id} onSelect={handleSelect} />
-                ))}
-                <div className="border-t border-border mx-3 my-1" />
-              </>
-            )}
-
             {filtered.map((z) => (
               <ZoneRow key={z.id} zone={z} selected={value === z.id} onSelect={handleSelect} />
             ))}
@@ -110,7 +97,7 @@ function ZoneRow({
   selected,
   onSelect,
 }: {
-  zone: { id: string; name: string; fee: number; estimatedMinutes: number };
+  zone: { id: string; name: string; fee: number; estimatedMinutes?: number };
   selected: boolean;
   onSelect: (id: string) => void;
 }) {
@@ -127,7 +114,6 @@ function ZoneRow({
         {zone.name}
       </span>
       <div className="flex items-center gap-2 shrink-0">
-        <span className="text-xs text-text-muted">{zone.estimatedMinutes} د</span>
         <span className="text-xs font-medium text-status-info">{zone.fee} د.ع</span>
       </div>
     </button>

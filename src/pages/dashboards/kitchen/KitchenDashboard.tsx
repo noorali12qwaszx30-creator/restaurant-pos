@@ -95,10 +95,9 @@ function StatsBar({ newCount, preparingCount, readyCount, lateCount }: {
 interface KitchenCardProps {
   order: LiveOrder;
   alarmLevel: AlarmLevel;
-  onStartPreparing?: () => void;
 }
 
-function KitchenOrderCard({ order, alarmLevel, onStartPreparing }: KitchenCardProps) {
+function KitchenOrderCard({ order, alarmLevel }: KitchenCardProps) {
   const age         = ageMin(order.createdAt);
   const isPreparing = order.status === "preparing";
   const isNew       = order.status === "pending";
@@ -207,18 +206,7 @@ function KitchenOrderCard({ order, alarmLevel, onStartPreparing }: KitchenCardPr
         <p className="text-[10px] text-text-muted text-center pb-1">+{order.items.length - 5} أصناف أخرى</p>
       )}
 
-      {/* Tap-to-start button */}
-      {isNew && onStartPreparing && (
-        <div className="px-2.5 pb-3 pt-2 border-t border-border mt-auto">
-          <button
-            onClick={onStartPreparing}
-            className="w-full h-10 rounded-xl bg-primary text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary-hover active:scale-[0.97] transition-all shadow-sm"
-          >
-            <Timer className="w-4 h-4" />
-            بدء التحضير
-          </button>
-        </div>
-      )}
+      {/* Kitchen is display-only — no action buttons */}
     </div>
   );
 }
@@ -226,7 +214,7 @@ function KitchenOrderCard({ order, alarmLevel, onStartPreparing }: KitchenCardPr
 /* ── Main KitchenDashboard ───────────────────────────────────── */
 export function KitchenDashboard() {
   const [tick, setTick] = useState(0);
-  const { orders, markPreparing } = useOrders();
+  const { orders } = useOrders();
   const alreadyAlarmed = useRef<Set<string>>(new Set());
 
   /* timer tick every second for live timer display */
@@ -343,7 +331,6 @@ export function KitchenDashboard() {
                 key={o.id}
                 order={o}
                 alarmLevel={getOrderLevel(o.createdAt)}
-                onStartPreparing={o.status === "pending" ? () => markPreparing(o.id) : undefined}
               />
             ))}
           </div>

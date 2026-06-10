@@ -48,10 +48,10 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { to: "/dashboard/delivery/archive",  label: "الأرشيف",   icon: Archive },
   ],
   takeaway: [
-    { to: "/dashboard/takeaway", label: "الرئيسية", icon: LayoutDashboard },
-    { to: "/dashboard/takeaway/orders", label: "الطلبات", icon: Package },
-    { to: "/dashboard/takeaway/menu", label: "القائمة", icon: UtensilsCrossed },
-    { to: "/dashboard/takeaway/profile", label: "حسابي", icon: User },
+    { to: "/dashboard/takeaway",           label: "القائمة",    icon: UtensilsCrossed },
+    { to: "/dashboard/takeaway/orders",    label: "الطلبات",    icon: Package         },
+    { to: "/dashboard/takeaway/completed", label: "المكتملة",   icon: Archive         },
+    { to: "/dashboard/takeaway/cancelled", label: "الملغية",    icon: AlertCircle     },
   ],
   kitchen: [
     { to: "/dashboard/kitchen", label: "الرئيسية", icon: LayoutDashboard },

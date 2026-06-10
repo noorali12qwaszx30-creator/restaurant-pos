@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Trash2, MessageSquare, Plus, Minus, ShoppingCart, FileText, Check } from "lucide-react";
 import type { CartItem } from "../hooks/useCart";
 import type { PosOrderType } from "./OrderTypeSelector";
-import { getZoneById } from "@/data/mock-zones";
+import { useSettings } from "@/contexts/SettingsContext";
 import { cn } from "@/lib/utils";
 
 
@@ -123,7 +123,8 @@ export function CartPanel({
   isSubmitting,
   onSubmit,
 }: Props) {
-  const zone = orderType === "delivery" ? getZoneById(zoneId) : undefined;
+  const { zones } = useSettings();
+  const zone = orderType === "delivery" ? zones.find(z => z.id === zoneId) : undefined;
   const deliveryFee = zone?.fee ?? 0;
   const subtotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
   const total = subtotal + deliveryFee;

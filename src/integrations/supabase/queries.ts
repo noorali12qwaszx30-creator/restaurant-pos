@@ -296,3 +296,79 @@ export async function toggleProfileActive(id: string, is_active: boolean): Promi
     .eq("id", id);
   if (error) throw error;
 }
+
+// ══════════════════════════════════════════════════════════════
+// DELIVERY AREAS — CRUD
+// ══════════════════════════════════════════════════════════════
+
+export async function upsertDeliveryArea(
+  area: { id?: string; name: string; fee: number; is_active?: boolean; sort_order?: number }
+): Promise<DeliveryArea> {
+  const row = { name: area.name, fee: area.fee, is_active: area.is_active ?? true, sort_order: area.sort_order ?? 0 };
+  if (area.id) {
+    const { data, error } = await (supabase as unknown as AnyRecord)
+      .from("delivery_areas").update(row).eq("id", area.id).select().single();
+    if (error) throw error;
+    return data as DeliveryArea;
+  }
+  const { data, error } = await (supabase as unknown as AnyRecord)
+    .from("delivery_areas").insert(row).select().single();
+  if (error) throw error;
+  return data as DeliveryArea;
+}
+
+export async function deleteDeliveryArea(id: string): Promise<void> {
+  const { error } = await (supabase as unknown as AnyRecord)
+    .from("delivery_areas").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// ══════════════════════════════════════════════════════════════
+// CANCELLATION REASONS — CRUD
+// ══════════════════════════════════════════════════════════════
+
+export async function upsertCancellationReason(
+  r: { id?: string; text: string }
+): Promise<CancellationReason> {
+  if (r.id) {
+    const { data, error } = await (supabase as unknown as AnyRecord)
+      .from("cancellation_reasons").update({ text: r.text }).eq("id", r.id).select().single();
+    if (error) throw error;
+    return data as CancellationReason;
+  }
+  const { data, error } = await (supabase as unknown as AnyRecord)
+    .from("cancellation_reasons").insert({ text: r.text, is_active: true }).select().single();
+  if (error) throw error;
+  return data as CancellationReason;
+}
+
+export async function deleteCancellationReason(id: string): Promise<void> {
+  const { error } = await (supabase as unknown as AnyRecord)
+    .from("cancellation_reasons").update({ is_active: false }).eq("id", id);
+  if (error) throw error;
+}
+
+// ══════════════════════════════════════════════════════════════
+// ISSUE REASONS — CRUD
+// ══════════════════════════════════════════════════════════════
+
+export async function upsertIssueReason(
+  r: { id?: string; text: string }
+): Promise<IssueReason> {
+  if (r.id) {
+    const { data, error } = await (supabase as unknown as AnyRecord)
+      .from("issue_reasons").update({ text: r.text }).eq("id", r.id).select().single();
+    if (error) throw error;
+    return data as IssueReason;
+  }
+  const { data, error } = await (supabase as unknown as AnyRecord)
+    .from("issue_reasons").insert({ text: r.text, is_active: true }).select().single();
+  if (error) throw error;
+  return data as IssueReason;
+}
+
+export async function deleteIssueReason(id: string): Promise<void> {
+  const { error } = await (supabase as unknown as AnyRecord)
+    .from("issue_reasons").update({ is_active: false }).eq("id", id);
+  if (error) throw error;
+}
