@@ -31,7 +31,7 @@ export function StatsCard({ label, value, prefix = "", suffix = "", change, icon
       </div>
       <div>
         <p className="text-2xl font-black text-text-primary tracking-tight num">
-          {prefix}{typeof value === "number" ? value.toLocaleString("ar-SA") : value}{suffix}
+          {prefix}{typeof value === "number" ? value.toLocaleString("en-US") : value}{suffix}
         </p>
         {change !== undefined && (
           <div className={cn(

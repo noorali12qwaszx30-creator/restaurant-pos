@@ -321,7 +321,7 @@ export function CustomerSection({ value, showAddress, onChange, onZoneFeeChange 
               <span className="flex items-center justify-between w-full">
                 <span className="font-medium">{selectedZone.name}</span>
                 <span className="text-xs text-primary font-bold bg-primary/10 rounded-lg px-2 py-0.5 me-1">
-                  +{selectedZone.fee.toLocaleString("ar-IQ")} د.ع
+                  +{selectedZone.fee.toLocaleString("en-US")} د.ع
                 </span>
               </span>
             ) : (
@@ -356,7 +356,7 @@ export function CustomerSection({ value, showAddress, onChange, onZoneFeeChange 
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <span className="text-xs font-bold text-primary bg-primary/10 rounded-lg px-2 py-0.5">
-                        {zone.fee.toLocaleString("ar-IQ")} د.ع
+                        {zone.fee.toLocaleString("en-US")} د.ع
                       </span>
                     </div>
                   </button>

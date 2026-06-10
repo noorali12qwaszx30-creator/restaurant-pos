@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 /* ─── helpers ────────────────────────────────────────────────── */
 function pct(a: number, b: number) { return b === 0 ? 0 : Math.round(a / b * 100); }
-function currency(n: number)       { return n.toLocaleString("ar-SA", { maximumFractionDigits: 0 }) + " د.ع"; }
+function currency(n: number)       { return n.toLocaleString("en-US", { maximumFractionDigits: 0 }) + " د.ع"; }
 function avgLabel(ms: number)      { const m = Math.round(ms / 60000); return m < 60 ? `${m} د` : `${Math.floor(m/60)}س ${m%60}د`; }
 
 /* ─── mini components ────────────────────────────────────────── */

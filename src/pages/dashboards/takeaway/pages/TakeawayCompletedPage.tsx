@@ -52,7 +52,7 @@ export function TakeawayCompletedPage() {
             <TrendingUp className="w-4 h-4" />
           </div>
           <p className="text-2xl font-black text-primary tabular-nums leading-none">
-            {todayRevenue.toLocaleString("ar-IQ")}
+            {todayRevenue.toLocaleString("en-US")}
           </p>
           <p className="text-[11px] text-text-muted mt-1.5 font-medium">إيرادات اليوم (د.ع)</p>
         </div>

@@ -64,8 +64,8 @@ export function ReportsTab() {
           ))}
         </div>
         <div className="flex justify-between mt-2 text-xs text-text-muted">
-          <span>أدنى: {Math.min(...WEEKLY_REVENUE.map((d) => d.revenue)).toLocaleString("ar")} د.ع</span>
-          <span>أعلى: {maxWeekly.toLocaleString("ar")} د.ع</span>
+          <span>أدنى: {Math.min(...WEEKLY_REVENUE.map((d) => d.revenue)).toLocaleString("en-US")} د.ع</span>
+          <span>أعلى: {maxWeekly.toLocaleString("en-US")} د.ع</span>
         </div>
       </div>
 

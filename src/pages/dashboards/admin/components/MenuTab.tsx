@@ -94,7 +94,7 @@ export function MenuTab() {
                 </div>
                 {item.description && <p className="text-xs text-text-muted truncate">{item.description}</p>}
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm font-bold text-primary">{Number(item.price).toLocaleString("ar-IQ")} د.ع</span>
+                  <span className="text-sm font-bold text-primary">{Number(item.price).toLocaleString("en-US")} د.ع</span>
                   <span className="text-xs text-text-muted">·</span>
                   <span className="text-xs text-text-muted">{item.preparation_time} د</span>
                 </div>

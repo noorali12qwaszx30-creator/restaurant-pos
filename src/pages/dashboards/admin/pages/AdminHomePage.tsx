@@ -22,7 +22,7 @@ interface PulseKpi {
 
 /* ─── helpers ────────────────────────────────────────────────── */
 function fmt(n: number) {
-  return n.toLocaleString("ar-SA");
+  return n.toLocaleString("en-US");
 }
 function fmtTime(d: Date) {
   return d.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" });

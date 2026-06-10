@@ -58,14 +58,14 @@ function InlineCartItem({ item, onAdd, onDecrement, onRemove, onUpdateNote }: {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-text-primary leading-tight truncate">{item.name}</p>
           <p className="text-xs text-text-muted tabular-nums mt-0.5">
-            {item.unitPrice.toLocaleString("ar-IQ")} × {item.quantity}
+            {item.unitPrice.toLocaleString("en-US")} × {item.quantity}
           </p>
         </div>
 
         {/* Total + note + remove */}
         <div className="flex items-center gap-1.5 shrink-0">
           <span className="text-sm font-black text-text-primary tabular-nums">
-            {(item.unitPrice * item.quantity).toLocaleString("ar-IQ")}
+            {(item.unitPrice * item.quantity).toLocaleString("en-US")}
           </span>
           <button
             onClick={() => setNoteOpen(o => !o)}
@@ -256,7 +256,7 @@ export function TakeawayMenuPage() {
           </div>
           <div className="text-start shrink-0">
             <p className="text-base font-black tabular-nums leading-tight">
-              {subtotal.toLocaleString("ar-IQ")}
+              {subtotal.toLocaleString("en-US")}
             </p>
             <p className="text-[10px] opacity-70 mt-0.5">د.ع</p>
           </div>
@@ -346,7 +346,7 @@ export function TakeawayMenuPage() {
                 <span className="text-sm text-text-muted font-medium">الإجمالي</span>
                 <div className="text-start">
                   <span className="text-xl font-black text-text-primary tabular-nums">
-                    {subtotal.toLocaleString("ar-IQ")}
+                    {subtotal.toLocaleString("en-US")}
                   </span>
                   <span className="text-sm font-medium text-text-muted mr-1">د.ع</span>
                 </div>

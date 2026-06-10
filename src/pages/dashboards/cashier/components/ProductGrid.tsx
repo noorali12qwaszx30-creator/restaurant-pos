@@ -135,7 +135,7 @@ const ProductCard = memo(function ProductCard({
           "text-[13px] font-black mt-auto tabular-nums",
           inCart ? "text-primary" : "text-text-secondary"
         )}>
-          {Number(item.price).toLocaleString("ar-IQ")}
+          {Number(item.price).toLocaleString("en-US")}
           <span className="text-[10px] font-medium opacity-70 mr-0.5">د.ع</span>
         </p>
       </div>

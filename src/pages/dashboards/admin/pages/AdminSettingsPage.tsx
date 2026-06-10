@@ -155,7 +155,7 @@ function MenuPanel() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-text-primary truncate">{item.name}</p>
-                <p className="text-[10px] text-text-muted">{cat?.name} · {Number(item.price).toLocaleString("ar-IQ")} د.ع</p>
+                <p className="text-[10px] text-text-muted">{cat?.name} · {Number(item.price).toLocaleString("en-US")} د.ع</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded-full",

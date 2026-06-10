@@ -38,7 +38,7 @@ function respond(q: string, ctx: ReturnType<typeof buildContext>): string {
   const lower = q.toLowerCase().replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/[ىئ]/g,"ي");
 
   if (/ايراد|إيراد|دخل|ربح|مبيعات/.test(lower))
-    return `إجمالي إيرادات المطعم من الطلبات المسلّمة: **${ctx.revenue.toLocaleString("ar-SA")} د.ع**\n(${ctx.delivered} طلب مسلّم من أصل ${ctx.totalOrders} طلب إجمالي)`;
+    return `إجمالي إيرادات المطعم من الطلبات المسلّمة: **${ctx.revenue.toLocaleString("en-US")} د.ع**\n(${ctx.delivered} طلب مسلّم من أصل ${ctx.totalOrders} طلب إجمالي)`;
 
   if (/طلب.*انتظار|كم.*انتظار|pending/.test(lower))
     return `يوجد حالياً **${ctx.pending} طلب** في الانتظار بحاجة لمراجعة.`;
@@ -59,7 +59,7 @@ function respond(q: string, ctx: ReturnType<typeof buildContext>): string {
     return `القائمة تحتوي على **${ctx.totalProducts} منتج** موزعة على **${ctx.totalCategories} فئة**.`;
 
   if (/ملخص|overview|تقرير سريع|خلاصه|خلاصة/.test(lower))
-    return `ملخص اليوم:\n- إجمالي الطلبات: **${ctx.totalOrders}**\n- مسلّمة: **${ctx.delivered}**\n- انتظار: **${ctx.pending}**\n- تحضير: **${ctx.preparing}**\n- ملغاة: **${ctx.cancelled}**\n- الإيرادات: **${ctx.revenue.toLocaleString("ar-SA")} د.ع**`;
+    return `ملخص اليوم:\n- إجمالي الطلبات: **${ctx.totalOrders}**\n- مسلّمة: **${ctx.delivered}**\n- انتظار: **${ctx.pending}**\n- تحضير: **${ctx.preparing}**\n- ملغاة: **${ctx.cancelled}**\n- الإيرادات: **${ctx.revenue.toLocaleString("en-US")} د.ع**`;
 
   if (/مساء|صباح|اهلا|مرحبا|هلا|السلام/.test(lower))
     return "أهلاً بك! أنا المساعد الذكي للوحة الإدارة. يمكنني الإجابة على أسئلة حول الطلبات، الإيرادات، المنتجات، والمناطق.";
