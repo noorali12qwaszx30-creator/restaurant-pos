@@ -2,6 +2,8 @@ import type { UserProfile, UserRole } from "@/types";
 
 export const IS_DEV_MODE = import.meta.env.VITE_DEV_MODE === "true";
 
+const MOCK_RESTAURANT_ID = "00000000-0000-0000-0000-000000000001";
+
 // Mock users — available when VITE_DEV_MODE=true
 const MOCK_USERS: Record<string, { password: string; profile: UserProfile }> = {
   admin: {
@@ -13,6 +15,8 @@ const MOCK_USERS: Record<string, { password: string; profile: UserProfile }> = {
       displayName: "مدير النظام",
       roles: ["admin"],
       isActive: true,
+      restaurantId: MOCK_RESTAURANT_ID,
+      isSuperAdmin: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -26,6 +30,8 @@ const MOCK_USERS: Record<string, { password: string; profile: UserProfile }> = {
       displayName: "كاشير 1",
       roles: ["cashier"],
       isActive: true,
+      restaurantId: MOCK_RESTAURANT_ID,
+      isSuperAdmin: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -39,6 +45,8 @@ const MOCK_USERS: Record<string, { password: string; profile: UserProfile }> = {
       displayName: "ميدان 1",
       roles: ["field"],
       isActive: true,
+      restaurantId: MOCK_RESTAURANT_ID,
+      isSuperAdmin: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -52,6 +60,8 @@ const MOCK_USERS: Record<string, { password: string; profile: UserProfile }> = {
       displayName: "مندوب التوصيل",
       roles: ["delivery"],
       isActive: true,
+      restaurantId: MOCK_RESTAURANT_ID,
+      isSuperAdmin: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -65,6 +75,8 @@ const MOCK_USERS: Record<string, { password: string; profile: UserProfile }> = {
       displayName: "تيك أواي 1",
       roles: ["takeaway"],
       isActive: true,
+      restaurantId: MOCK_RESTAURANT_ID,
+      isSuperAdmin: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -78,6 +90,8 @@ const MOCK_USERS: Record<string, { password: string; profile: UserProfile }> = {
       displayName: "طاهي المطبخ",
       roles: ["kitchen"],
       isActive: true,
+      restaurantId: MOCK_RESTAURANT_ID,
+      isSuperAdmin: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -91,6 +105,23 @@ const MOCK_USERS: Record<string, { password: string; profile: UserProfile }> = {
       displayName: "متعدد الأدوار",
       roles: ["cashier", "takeaway", "admin"] as UserRole[],
       isActive: true,
+      restaurantId: MOCK_RESTAURANT_ID,
+      isSuperAdmin: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  },
+  superadmin: {
+    password: "SuperAdmin@123",
+    profile: {
+      uid: "mock-superadmin-001",
+      username: "superadmin",
+      email: "superadmin@system.local",
+      displayName: "المدير العام",
+      roles: ["super_admin"],
+      isActive: true,
+      restaurantId: null,
+      isSuperAdmin: true,
       createdAt: new Date(),
       updatedAt: new Date(),
     },

@@ -1,13 +1,14 @@
 /**
  * useMenuData — loads menu categories + items.
  * Dev mode:  returns MOCK data instantly.
- * Production: fetches from Supabase once, then serves from module-level cache
- *             so re-mounts (tab navigation) are instant with no loading delay.
+ * Production: fetches from Supabase once per restaurant, then serves from
+ *             module-level cache keyed by restaurantId so re-mounts are instant.
  */
 import { useState, useEffect } from "react";
 import { IS_DEV_MODE } from "@/lib/dev-mock";
 import { MENU_CATEGORIES as MOCK_CATS, MENU_ITEMS as MOCK_ITEMS } from "@/data/mock-menu";
 import type { MenuItem as MockMenuItem } from "@/data/mock-types";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface MenuCategory {
   id: string;
@@ -34,7 +35,6 @@ interface UseMenuData {
   refetch: () => void;
 }
 
-// Map mock data shapes → unified shape
 function mockItemToMenuItemData(i: MockMenuItem): MenuItemData {
   return {
     id: i.id,
@@ -48,15 +48,19 @@ function mockItemToMenuItemData(i: MockMenuItem): MenuItemData {
   };
 }
 
-// ── Module-level cache — survives re-mounts, cleared only on manual refetch ──
+// ── Module-level cache keyed by restaurantId (null = super_admin / dev) ──
 interface MenuCache {
   categories: MenuCategory[];
   items: MenuItemData[];
 }
-let _cache: MenuCache | null = null;
-let _inflight: Promise<MenuCache> | null = null;
+const _cacheMap = new Map<string, MenuCache>();
+const _inflightMap = new Map<string, Promise<MenuCache>>();
 
-async function doFetch(): Promise<MenuCache> {
+function getCacheKey(restaurantId: string | null): string {
+  return restaurantId ?? "__dev__";
+}
+
+async function doFetch(restaurantId: string | null): Promise<MenuCache> {
   if (IS_DEV_MODE) {
     return {
       categories: MOCK_CATS.map(c => ({ id: c.id, name: c.name, icon: c.icon, sort_order: 0 })),
@@ -64,7 +68,10 @@ async function doFetch(): Promise<MenuCache> {
     };
   }
   const { getMenuCategories, getMenuItems } = await import("@/integrations/supabase/queries");
-  const [cats, itmList] = await Promise.all([getMenuCategories(), getMenuItems()]);
+  const [cats, itmList] = await Promise.all([
+    getMenuCategories(restaurantId),
+    getMenuItems(restaurantId),
+  ]);
   return {
     categories: cats.map(c => ({
       id: c.id, name: c.name, icon: c.icon ?? undefined, sort_order: c.sort_order,
@@ -83,38 +90,45 @@ async function doFetch(): Promise<MenuCache> {
 }
 
 export function useMenuData(): UseMenuData {
-  // Initialize from cache instantly if available — no loading flash on re-mount
-  const [categories, setCategories] = useState<MenuCategory[]>(_cache?.categories ?? []);
-  const [items, setItems]           = useState<MenuItemData[]>(_cache?.items ?? []);
-  const [isLoading, setIsLoading]   = useState<boolean>(!_cache);
+  const { profile } = useAuth();
+  const restaurantId = profile?.restaurantId ?? null;
+  const cacheKey = getCacheKey(restaurantId);
+
+  const cached = _cacheMap.get(cacheKey);
+
+  const [categories, setCategories] = useState<MenuCategory[]>(cached?.categories ?? []);
+  const [items, setItems]           = useState<MenuItemData[]>(cached?.items ?? []);
+  const [isLoading, setIsLoading]   = useState<boolean>(!cached);
   const [tick, setTick]             = useState(0);
 
   useEffect(() => {
-    // Cache hit and not a manual refetch — serve instantly
-    if (_cache && tick === 0) {
-      setCategories(_cache.categories);
-      setItems(_cache.items);
+    const key = cacheKey;
+    const existing = _cacheMap.get(key);
+
+    // Cache hit and not a manual refetch
+    if (existing && tick === 0) {
+      setCategories(existing.categories);
+      setItems(existing.items);
       setIsLoading(false);
       return;
     }
 
     let cancelled = false;
 
-    // On manual refetch, clear cache so we get fresh data
     if (tick > 0) {
-      _cache = null;
-      _inflight = null;
+      _cacheMap.delete(key);
+      _inflightMap.delete(key);
     }
 
-    // Deduplicate concurrent fetches — share one in-flight promise
-    if (!_inflight) {
-      _inflight = doFetch()
-        .then(data => { _cache = data; return data; })
-        .finally(() => { _inflight = null; });
+    if (!_inflightMap.has(key)) {
+      const promise = doFetch(restaurantId)
+        .then(data => { _cacheMap.set(key, data); return data; })
+        .finally(() => { _inflightMap.delete(key); });
+      _inflightMap.set(key, promise);
     }
 
     setIsLoading(true);
-    _inflight
+    _inflightMap.get(key)!
       .then(data => {
         if (!cancelled) {
           setCategories(data.categories);
@@ -128,7 +142,8 @@ export function useMenuData(): UseMenuData {
       });
 
     return () => { cancelled = true; };
-  }, [tick]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tick, cacheKey]);
 
   return {
     categories,

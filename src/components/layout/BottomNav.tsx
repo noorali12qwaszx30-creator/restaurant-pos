@@ -67,6 +67,14 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { to: "/dashboard/admin/settings",   label: "إعدادات",    icon: Settings         },
     { to: "/dashboard/admin/assistant",  label: "المساعد",    icon: BotMessageSquare },
   ],
+  super_admin: [
+    { to: "/dashboard/admin",            label: "الرئيسية",   icon: LayoutDashboard  },
+    { to: "/dashboard/admin/orders",     label: "الطلبات",    icon: ShoppingBag      },
+    { to: "/dashboard/admin/stats",      label: "إحصائيات",  icon: BarChart3        },
+    { to: "/dashboard/admin/users",      label: "الموظفون",   icon: Users            },
+    { to: "/dashboard/admin/settings",   label: "إعدادات",    icon: Settings         },
+    { to: "/dashboard/admin/assistant",  label: "المساعد",    icon: BotMessageSquare },
+  ],
 };
 
 interface BottomNavProps {

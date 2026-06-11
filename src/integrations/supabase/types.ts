@@ -1,11 +1,22 @@
 // Auto-generated type stubs — replace with `supabase gen types typescript` output
 // after running migrations against your project.
 
-export type UserRole = "cashier" | "kitchen" | "field" | "delivery" | "admin";
+export type UserRole = "cashier" | "kitchen" | "field" | "delivery" | "admin" | "takeaway" | "super_admin";
 export type OrderStatus = "pending" | "preparing" | "ready" | "delivering" | "delivered" | "cancelled";
 export type OrderType = "delivery" | "takeaway" | "pickup" | "dine_in";
 export type OrderSource = "local" | "phone" | "instagram" | "whatsapp" | "telegram";
 export type PaymentMethod = "cash" | "card" | "split";
+
+// ── Restaurant ─────────────────────────────────────────────────
+export interface Restaurant {
+  id: string;
+  name: string;
+  logo: string | null;
+  phone: string | null;
+  address: string | null;
+  is_active: boolean;
+  created_at: string;
+}
 
 // ── Row types ─────────────────────────────────────────────────
 export interface Profile {
@@ -14,8 +25,10 @@ export interface Profile {
   display_name: string;
   phone: string | null;
   role: UserRole;
+  roles: UserRole[];
   is_active: boolean;
   avatar_url: string | null;
+  restaurant_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -27,6 +40,7 @@ export interface MenuCategory {
   icon: string | null;
   sort_order: number;
   is_active: boolean;
+  restaurant_id: string | null;
   created_at: string;
 }
 
@@ -41,6 +55,7 @@ export interface MenuItem {
   preparation_time: number;
   is_available: boolean;
   sort_order: number;
+  restaurant_id: string | null;
   created_at: string;
   updated_at: string;
   // joined
@@ -53,6 +68,7 @@ export interface DeliveryArea {
   fee: number;
   is_active: boolean;
   sort_order: number;
+  restaurant_id: string | null;
   created_at: string;
 }
 
@@ -74,6 +90,7 @@ export interface Order {
   notes: string | null;
   cashier_id: string | null;
   driver_id: string | null;
+  restaurant_id: string | null;
   created_at: string;
   updated_at: string;
   preparing_at: string | null;
@@ -111,6 +128,7 @@ export interface CancellationReason {
   id: string;
   text: string;
   is_active: boolean;
+  restaurant_id: string | null;
   created_at: string;
 }
 
@@ -118,6 +136,7 @@ export interface IssueReason {
   id: string;
   text: string;
   is_active: boolean;
+  restaurant_id: string | null;
   created_at: string;
 }
 
@@ -127,6 +146,7 @@ export interface ActivityLog {
   user_id: string | null;
   action: string;
   details: Record<string, unknown> | null;
+  restaurant_id: string | null;
   created_at: string;
 }
 
@@ -135,6 +155,7 @@ export interface PushToken {
   user_id: string;
   token: string;
   platform: string;
+  restaurant_id: string | null;
   created_at: string;
 }
 
@@ -142,6 +163,7 @@ export interface PushToken {
 export interface Database {
   public: {
     Tables: {
+      restaurants:           { Row: Restaurant;            Insert: Partial<Restaurant>;           Update: Partial<Restaurant>           };
       profiles:              { Row: Profile;              Insert: Partial<Profile>;              Update: Partial<Profile>              };
       menu_categories:       { Row: MenuCategory;         Insert: Partial<MenuCategory>;         Update: Partial<MenuCategory>         };
       menu_items:            { Row: MenuItem;             Insert: Partial<MenuItem>;             Update: Partial<MenuItem>             };

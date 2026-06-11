@@ -1,6 +1,6 @@
 /**
- * Supabase Realtime subscriptions.
- * Each function returns an unsubscribe callback.
+ * Supabase Realtime subscriptions — Multi-tenant aware.
+ * restaurantId filters events so each tenant sees only their data.
  */
 import { supabase } from "./client";
 import type { Order, OrderItem } from "./types";
@@ -10,18 +10,27 @@ import type { Order, OrderItem } from "./types";
 // ══════════════════════════════════════════════════════════════
 
 export function subscribeToOrders(
+  restaurantId: string | null,
   callbacks: {
     onInsert?: (order: Order) => void;
     onUpdate?: (order: Order) => void;
     onDelete?: (id: string) => void;
   }
 ): () => void {
+  const channelName = restaurantId
+    ? `orders-realtime-${restaurantId}`
+    : "orders-realtime-superadmin";
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const filterConfig: any = { event: "*", schema: "public", table: "orders" };
+  if (restaurantId) filterConfig.filter = `restaurant_id=eq.${restaurantId}`;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channel = (supabase as any)
-    .channel("orders-realtime")
+    .channel(channelName)
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: "orders" },
+      filterConfig,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (payload: any) => {
         if (payload.eventType === "INSERT") callbacks.onInsert?.(payload.new as Order);
@@ -36,26 +45,34 @@ export function subscribeToOrders(
 
 // ── Kitchen: pending + preparing orders only ───────────────────
 export function subscribeToKitchenOrders(
+  restaurantId: string | null,
   callbacks: {
     onInsert?: (order: Order) => void;
     onUpdate?: (order: Order) => void;
   }
 ): () => void {
+  const channelName = restaurantId
+    ? `kitchen-orders-${restaurantId}`
+    : "kitchen-orders-superadmin";
+
+  // Supabase realtime only supports a single filter condition per subscription
+  // so we filter by restaurant_id and check status client-side when needed
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const filterConfig: any = { event: "*", schema: "public", table: "orders" };
+  if (restaurantId) filterConfig.filter = `restaurant_id=eq.${restaurantId}`;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channel = (supabase as any)
-    .channel("kitchen-orders")
+    .channel(channelName)
     .on(
       "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "orders",
-        filter: "status=in.(pending,preparing)",
-      },
+      filterConfig,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (payload: any) => {
-        if (payload.eventType === "INSERT") callbacks.onInsert?.(payload.new as Order);
-        if (payload.eventType === "UPDATE") callbacks.onUpdate?.(payload.new as Order);
+        const order = payload.new as Order;
+        if (!["pending", "preparing"].includes(order.status)) return;
+        if (payload.eventType === "INSERT") callbacks.onInsert?.(order);
+        if (payload.eventType === "UPDATE") callbacks.onUpdate?.(order);
       }
     )
     .subscribe();
@@ -65,17 +82,26 @@ export function subscribeToKitchenOrders(
 
 // ── Field: ready + preparing orders ───────────────────────────
 export function subscribeToFieldOrders(
+  restaurantId: string | null,
   callbacks: {
     onInsert?: (order: Order) => void;
     onUpdate?: (order: Order) => void;
   }
 ): () => void {
+  const channelName = restaurantId
+    ? `field-orders-${restaurantId}`
+    : "field-orders-superadmin";
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const filterConfig: any = { event: "*", schema: "public", table: "orders" };
+  if (restaurantId) filterConfig.filter = `restaurant_id=eq.${restaurantId}`;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channel = (supabase as any)
-    .channel("field-orders")
+    .channel(channelName)
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: "orders" },
+      filterConfig,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (payload: any) => {
         const order = payload.new as Order;
@@ -161,7 +187,6 @@ export function usePresenceChannel(
 
   channel
     .on("presence", { event: "sync" }, () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const raw = channel.presenceState() as Record<string, any[]>;
       const list: PresenceState[] = Object.entries(raw).flatMap(([uid, entries]) =>

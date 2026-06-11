@@ -1,6 +1,7 @@
 import { HashRouter as BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { RestaurantProvider } from "@/contexts/RestaurantContext";
 import { OrderProvider } from "@/contexts/OrderContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { NotifyProvider } from "@/components/notifications/NotificationContext";
@@ -20,13 +21,15 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <SettingsProvider>
-            <OrderProvider>
-              <NotifyProvider>
-                <AppRouter />
-              </NotifyProvider>
-            </OrderProvider>
-          </SettingsProvider>
+          <RestaurantProvider>
+            <SettingsProvider>
+              <OrderProvider>
+                <NotifyProvider>
+                  <AppRouter />
+                </NotifyProvider>
+              </OrderProvider>
+            </SettingsProvider>
+          </RestaurantProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

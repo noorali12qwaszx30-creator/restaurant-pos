@@ -1,15 +1,7 @@
 /**
- * OrderContext — Shared reactive order store.
+ * OrderContext — Shared reactive order store. Multi-tenant aware.
  * Dev mode:  in-memory state on top of MOCK_ORDERS, full lifecycle transitions.
- * Production: Supabase queries + Realtime subscriptions.
- *
- * Lifecycle (CRITICAL):
- *   cashier → pending
- *   kitchen → preparing   (pending → preparing, ONLY kitchen)
- *   field   → ready       (preparing → ready)
- *   field   → delivering  (ready → delivering, assigns driver)
- *   driver  → delivered   (delivering → delivered)
- *   any     → cancelled   (with reason)
+ * Production: Supabase queries + Realtime subscriptions, filtered by restaurantId.
  */
 import {
   createContext,
@@ -22,6 +14,7 @@ import {
 import { IS_DEV_MODE } from "@/lib/dev-mock";
 import { MOCK_ORDERS } from "@/data/mock-orders";
 import type { Order as MockOrder } from "@/data/mock-types";
+import { useAuth } from "./AuthContext";
 
 // ── Unified Order type (works for both mock + Supabase) ────────
 export interface LiveOrder {
@@ -43,6 +36,7 @@ export interface LiveOrder {
   cashierId?: string;
   driverId?: string;
   driverName?: string;
+  restaurantId?: string;
   items: Array<{
     menuItemId: string;
     name: string;
@@ -63,7 +57,6 @@ export interface LiveOrder {
 }
 
 function mockToLive(o: MockOrder): LiveOrder {
-  // Map old statuses to new lifecycle
   let status = o.status as LiveOrder["status"];
   if ((status as string) === "out_for_delivery") status = "delivering";
   if ((status as string) === "paid")             status = "delivered";
@@ -105,30 +98,14 @@ interface OrderContextValue {
   isLoading: boolean;
   loadError: string | null;
 
-  // Cashier
   addOrder: (order: Omit<LiveOrder, "id" | "status" | "createdAt" | "updatedAt">) => Promise<string>;
-
-  // Kitchen: pending → preparing
   markPreparing: (orderId: string) => Promise<void>;
-
-  // Field: preparing → ready
   markReady: (orderId: string) => Promise<void>;
-
-  // Field: ready → delivering (with driver)
   assignAndDispatch: (orderId: string, driverId: string, driverName: string) => Promise<void>;
-
-  // Delivery: delivering → delivered
   markDelivered: (orderId: string) => Promise<void>;
-
-  // Cashier: edit order (pre-delivering)
   editOrder: (orderId: string, patch: Partial<Pick<LiveOrder, "customerName"|"customerPhone"|"deliveryAddress"|"notes"|"subtotal"|"deliveryFee"|"tax"|"total"|"items">>) => Promise<void>;
-
-  // Any: → cancelled
   cancelOrder: (orderId: string, reason: string, cancelledBy?: string) => Promise<void>;
-
-  // Any: flag issue
   reportIssue: (orderId: string, reason: string, note?: string) => Promise<void>;
-
   refetch: () => Promise<void>;
 }
 
@@ -136,11 +113,13 @@ const OrderContext = createContext<OrderContextValue | null>(null);
 
 // ── Provider ──────────────────────────────────────────────────
 export function OrderProvider({ children }: { children: ReactNode }) {
+  const { profile } = useAuth();
+  const restaurantId = profile?.restaurantId ?? null;
+
   const [orders, setOrders] = useState<LiveOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // ── Load orders (silent=true → no loading spinner, no error state) ──
   const loadOrders = useCallback(async (silent = false) => {
     if (!silent) { setIsLoading(true); setLoadError(null); }
     if (IS_DEV_MODE) {
@@ -148,7 +127,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     } else {
       try {
         const { getOrders } = await import("@/integrations/supabase/queries");
-        const data = await getOrders();
+        const data = await getOrders(restaurantId);
         setOrders(data.map(mapFullOrder));
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -157,35 +136,32 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       }
     }
     if (!silent) setIsLoading(false);
-  }, []);
+  }, [restaurantId]);
 
   useEffect(() => {
-    loadOrders(false); // first load — show spinner
+    loadOrders(false);
   }, [loadOrders]);
 
-  // ── Silent background polling every 3s ──
+  // Silent background polling every 3s
   useEffect(() => {
     if (IS_DEV_MODE) return;
     const id = setInterval(() => loadOrders(true), 3_000);
     return () => clearInterval(id);
   }, [loadOrders]);
 
-  // ── Realtime (production) ──
+  // Realtime (production)
   useEffect(() => {
     if (IS_DEV_MODE) return;
     let unsub: (() => void) | undefined;
     import("@/integrations/supabase/realtime").then(({ subscribeToOrders }) => {
-      unsub = subscribeToOrders({
+      unsub = subscribeToOrders(restaurantId, {
         onInsert: async (o) => {
-          // Realtime INSERT payload lacks joined tables (order_items, delivery_area…).
-          // Fetch the full order so every dashboard gets items + orderNumber immediately.
           try {
             const { getOrder } = await import("@/integrations/supabase/queries");
             const full = await getOrder(o.id);
             if (full) {
               const live = mapFullOrder(full);
               setOrders(prev => {
-                // Replace optimistic entry (same id) or prepend new
                 const existing = prev.find(p => p.id === live.id);
                 if (existing) {
                   return prev.map(p => p.id === live.id
@@ -197,8 +173,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
               });
               return;
             }
-          } catch {/* fall through to bare payload */}
-          // Fallback: add with whatever the Realtime payload provides
+          } catch {/* fall through */}
           setOrders(prev => {
             if (prev.some(p => p.id === o.id)) return prev;
             return [dbOrderToLive(o), ...prev];
@@ -208,7 +183,6 @@ export function OrderProvider({ children }: { children: ReactNode }) {
           const live = dbOrderToLive(o);
           setOrders(prev => prev.map(p => {
             if (p.id !== live.id) return p;
-            // Realtime UPDATE rows don't include order_items — preserve existing items
             return { ...live, items: live.items.length > 0 ? live.items : p.items };
           }));
         },
@@ -218,7 +192,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       });
     });
     return () => unsub?.();
-  }, []);
+  }, [restaurantId]);
 
   // ── Mutations ──────────────────────────────────────────────
 
@@ -251,6 +225,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         tax: order.tax,
         total: order.total,
         cashier_id: order.cashierId ?? "",
+        restaurant_id: restaurantId,
       },
       order.items.map(i => ({
         menu_item_id: i.menuItemId,
@@ -261,32 +236,26 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       }))
     );
 
-    // Add optimistically with local items IMMEDIATELY — this ensures
-    // the Realtime INSERT event (which arrives with no items) is
-    // blocked by the duplicate check, and the order is visible at once.
     const nowOpt = new Date();
     const optimistic: LiveOrder = { ...order, id: created.id, status: "pending", createdAt: nowOpt, updatedAt: nowOpt };
     setOrders(prev => [optimistic, ...prev.filter(p => p.id !== optimistic.id)]);
 
-    // Then fetch the DB version to get order_number + accurate timestamps.
-    // If DB returns items, upgrade the local record; otherwise keep optimistic items.
     try {
       const full = await getOrder(created.id);
       if (full) {
         const live = mapFullOrder(full);
-        // If DB returned empty items (schema timing), keep local items
         if (live.items.length === 0) live.items = order.items;
         setOrders(prev => [live, ...prev.filter(p => p.id !== live.id)]);
       }
     } catch {
-      // Fallback: add with items from local state (no DB timestamps)
       const now = new Date();
       const fallback: LiveOrder = { ...order, id: created.id, status: "pending", createdAt: now, updatedAt: now };
       setOrders(prev => [fallback, ...prev.filter(p => p.id !== fallback.id)]);
     }
 
     return created.id;
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurantId]);
 
   const markPreparing = useCallback(async (orderId: string) => {
     patchLocal(orderId, { status: "preparing", preparingAt: new Date() });
@@ -410,6 +379,7 @@ function mapFullOrder(o: any): LiveOrder {
     cashierId: o.cashier_id ?? undefined,
     driverId: o.driver_id ?? undefined,
     driverName: (o.driver as { display_name?: string } | undefined)?.display_name,
+    restaurantId: o.restaurant_id ?? undefined,
     items: (o.items ?? []).map((i: { menu_item_id: string; name: string; quantity: number; unit_price: number; notes?: string | null }) => ({
       menuItemId: i.menu_item_id,
       name: i.name,
@@ -429,7 +399,7 @@ function mapFullOrder(o: any): LiveOrder {
   };
 }
 
-// ── DB → LiveOrder (production) ───────────────────────────────
+// ── DB → LiveOrder (Realtime payload — no joins) ──────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function dbOrderToLive(o: any): LiveOrder {
   return {
@@ -450,6 +420,7 @@ function dbOrderToLive(o: any): LiveOrder {
     notes: o.notes,
     driverId: o.driver_id,
     driverName: o.driver?.display_name,
+    restaurantId: o.restaurant_id ?? undefined,
     items: (o.items ?? []).map((i: { menu_item_id: string; name: string; quantity: number; unit_price: number; notes?: string }) => ({
       menuItemId: i.menu_item_id,
       name: i.name,

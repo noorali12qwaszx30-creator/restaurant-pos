@@ -6,6 +6,7 @@
 import { useState, useEffect } from "react";
 import { IS_DEV_MODE } from "@/lib/dev-mock";
 import { MOCK_DRIVERS } from "@/data/mock-drivers";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface Driver {
   id: string;
@@ -17,6 +18,9 @@ export interface Driver {
 }
 
 export function useDrivers(): { drivers: Driver[]; isLoading: boolean } {
+  const { profile } = useAuth();
+  const restaurantId = profile?.restaurantId ?? null;
+
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -43,14 +47,13 @@ export function useDrivers(): { drivers: Driver[]; isLoading: boolean } {
       } else {
         try {
           const { getDrivers } = await import("@/integrations/supabase/queries");
-          const data = await getDrivers();
+          const data = await getDrivers(restaurantId);
           if (!cancelled) {
             setDrivers(
               data.map(p => ({
                 id: p.id,
                 name: p.display_name,
                 phone: p.phone ?? undefined,
-                // Supabase profiles don't store live status — default to available
                 status: "available" as Driver["status"],
                 currentOrders: 0,
                 lastActivity: new Date(p.updated_at),
@@ -67,7 +70,7 @@ export function useDrivers(): { drivers: Driver[]; isLoading: boolean } {
 
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, [restaurantId]);
 
   return { drivers, isLoading };
 }

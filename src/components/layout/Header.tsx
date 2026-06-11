@@ -13,12 +13,13 @@ interface HeaderProps {
 }
 
 const ROLE_COLORS: Record<UserRole, string> = {
-  cashier:  "from-orange-500 to-orange-600",
-  field:    "from-sky-500 to-sky-600",
-  delivery: "from-emerald-500 to-emerald-600",
-  takeaway: "from-amber-500 to-amber-600",
-  kitchen:  "from-rose-500 to-rose-600",
-  admin:    "from-violet-500 to-violet-600",
+  cashier:     "from-orange-500 to-orange-600",
+  field:       "from-sky-500 to-sky-600",
+  delivery:    "from-emerald-500 to-emerald-600",
+  takeaway:    "from-amber-500 to-amber-600",
+  kitchen:     "from-rose-500 to-rose-600",
+  admin:       "from-violet-500 to-violet-600",
+  super_admin: "from-yellow-500 to-yellow-600",
 };
 
 export function Header({ role }: HeaderProps) {

@@ -4,7 +4,8 @@ export type UserRole =
   | "delivery"
   | "takeaway"
   | "kitchen"
-  | "admin";
+  | "admin"
+  | "super_admin";
 
 export interface UserProfile {
   uid: string;
@@ -13,6 +14,8 @@ export interface UserProfile {
   roles: UserRole[];
   displayName: string;
   isActive: boolean;
+  restaurantId: string | null;
+  isSuperAdmin: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -68,13 +71,21 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     iconName: "Settings2",
     color: "hsl(271 81% 56%)",
   },
+  super_admin: {
+    id: "super_admin",
+    label: "مدير عام",
+    description: "إدارة جميع المطاعم",
+    iconName: "Crown",
+    color: "hsl(45 100% 50%)",
+  },
 };
 
 export const ROLE_ROUTES: Record<UserRole, string> = {
-  cashier: "/dashboard/cashier",
-  field: "/dashboard/field",
-  delivery: "/dashboard/delivery",
-  takeaway: "/dashboard/takeaway",
-  kitchen: "/dashboard/kitchen",
-  admin: "/dashboard/admin",
+  cashier:     "/dashboard/cashier",
+  field:       "/dashboard/field",
+  delivery:    "/dashboard/delivery",
+  takeaway:    "/dashboard/takeaway",
+  kitchen:     "/dashboard/kitchen",
+  admin:       "/dashboard/admin",
+  super_admin: "/dashboard/admin",
 };

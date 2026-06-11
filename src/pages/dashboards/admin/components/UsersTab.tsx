@@ -8,12 +8,13 @@ import { SearchBar } from "@/components/dashboard/SearchBar";
 import type { UserRole } from "@/types";
 
 const ROLE_BADGE_VARIANTS: Record<UserRole, "default" | "success" | "warning" | "info" | "secondary"> = {
-  admin:    "warning",
-  cashier:  "default",
-  field:    "info",
-  delivery: "secondary",
-  takeaway: "success",
-  kitchen:  "secondary",
+  admin:       "warning",
+  cashier:     "default",
+  field:       "info",
+  delivery:    "secondary",
+  takeaway:    "success",
+  kitchen:     "secondary",
+  super_admin: "warning",
 };
 
 export function UsersTab() {

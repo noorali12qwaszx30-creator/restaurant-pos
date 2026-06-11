@@ -1,20 +1,17 @@
 /**
  * useOrdersRealtime — subscribe to live order changes via Supabase Realtime.
- * Works on top of a local React state so consumers don't need to manage channels.
- *
- * Usage:
- *   const { orders, isLoading } = useOrdersRealtime({ status: ["pending","preparing"] });
+ * Multi-tenant: filters by restaurantId from AuthContext.
  */
 import { useEffect, useState, useCallback } from "react";
 import { getOrders } from "@/integrations/supabase/queries";
 import { subscribeToOrders } from "@/integrations/supabase/realtime";
 import type { Order, OrderStatus, OrderType } from "@/integrations/supabase/types";
 import { IS_DEV_MODE } from "@/lib/dev-mock";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Options {
   status?: OrderStatus | OrderStatus[];
   type?: OrderType;
-  /** Disable realtime (for dev/mock mode) */
   disableRealtime?: boolean;
 }
 
@@ -26,6 +23,9 @@ interface Result {
 }
 
 export function useOrdersRealtime(opts: Options = {}): Result {
+  const { profile } = useAuth();
+  const restaurantId = profile?.restaurantId ?? null;
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +33,7 @@ export function useOrdersRealtime(opts: Options = {}): Result {
   const fetchOrders = useCallback(async () => {
     try {
       setIsLoading(true);
-      const data = await getOrders({ status: opts.status, type: opts.type });
+      const data = await getOrders(restaurantId, { status: opts.status, type: opts.type });
       setOrders(data);
       setError(null);
     } catch (err) {
@@ -41,19 +41,18 @@ export function useOrdersRealtime(opts: Options = {}): Result {
     } finally {
       setIsLoading(false);
     }
-  }, [opts.status, opts.type]); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurantId, opts.status, opts.type]);
 
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
 
   useEffect(() => {
-    // In dev mode (mock data) skip realtime
     if (IS_DEV_MODE || opts.disableRealtime) return;
 
-    const unsub = subscribeToOrders({
+    const unsub = subscribeToOrders(restaurantId, {
       onInsert: (newOrder) => {
-        // Only add if passes current filters
         const statuses = opts.status
           ? Array.isArray(opts.status) ? opts.status : [opts.status]
           : null;
@@ -65,7 +64,6 @@ export function useOrdersRealtime(opts: Options = {}): Result {
         setOrders((prev) => {
           const idx = prev.findIndex((o) => o.id === updatedOrder.id);
           if (idx === -1) {
-            // Might have just transitioned into our filtered set
             const statuses = opts.status
               ? Array.isArray(opts.status) ? opts.status : [opts.status]
               : null;
@@ -74,7 +72,6 @@ export function useOrdersRealtime(opts: Options = {}): Result {
             }
             return prev;
           }
-          // If status no longer matches filter, remove it
           const statuses = opts.status
             ? Array.isArray(opts.status) ? opts.status : [opts.status]
             : null;
@@ -92,7 +89,8 @@ export function useOrdersRealtime(opts: Options = {}): Result {
     });
 
     return unsub;
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurantId]);
 
   return { orders, isLoading, error, refetch: fetchOrders };
 }

@@ -1,6 +1,7 @@
 /**
  * All Supabase data queries — orders, menu, profiles, areas, reasons.
- * Types come from src/integrations/supabase/types.ts
+ * Multi-tenant: all queries accept restaurantId for data isolation.
+ * Super Admin (restaurantId = null) can see everything via RLS.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyRecord = Record<string, any>;
@@ -12,15 +13,24 @@ import type {
   OrderStatus, OrderType, OrderSource, PaymentMethod,
 } from "./types";
 
+// Helper: apply restaurant_id filter if present
+function withRestaurant<T extends AnyRecord>(q: T, restaurantId: string | null): T {
+  if (restaurantId) return q.eq("restaurant_id", restaurantId);
+  return q; // super_admin: no filter, RLS handles it
+}
+
 // ══════════════════════════════════════════════════════════════
 // ORDERS
 // ══════════════════════════════════════════════════════════════
 
 /** Fetch all orders with nested items + area + driver + cashier */
-export async function getOrders(filters?: {
-  status?: OrderStatus | OrderStatus[];
-  type?: OrderType;
-}): Promise<Order[]> {
+export async function getOrders(
+  restaurantId: string | null,
+  filters?: {
+    status?: OrderStatus | OrderStatus[];
+    type?: OrderType;
+  }
+): Promise<Order[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let q: any = supabase
     .from("orders")
@@ -32,6 +42,8 @@ export async function getOrders(filters?: {
       cashier:profiles!cashier_id(id, display_name)
     `)
     .order("created_at", { ascending: false });
+
+  q = withRestaurant(q, restaurantId);
 
   if (filters?.status) {
     const statuses = Array.isArray(filters.status) ? filters.status : [filters.status];
@@ -79,6 +91,7 @@ export async function createOrder(
     tax: number;
     total: number;
     cashier_id: string;
+    restaurant_id: string | null;
   },
   items: Array<{
     menu_item_id: string;
@@ -88,7 +101,6 @@ export async function createOrder(
     notes?: string;
   }>
 ): Promise<Order> {
-  // Insert order
   const { data: newOrder, error: orderErr } = await (supabase as unknown as AnyRecord)
     .from("orders")
     .insert({ ...order, status: "pending" })
@@ -96,7 +108,6 @@ export async function createOrder(
     .single();
   if (orderErr) throw orderErr;
 
-  // Insert items
   const itemRows = items.map((i) => ({ ...i, order_id: (newOrder as AnyRecord).id }));
   const { error: itemsErr } = await (supabase as unknown as AnyRecord)
     .from("order_items")
@@ -127,14 +138,12 @@ export async function updateOrder(
     notes?: string;
   }>
 ): Promise<void> {
-  // Update order row
   const { error: orderErr } = await (supabase as unknown as AnyRecord)
     .from("orders")
     .update(patch)
     .eq("id", orderId);
   if (orderErr) throw orderErr;
 
-  // Replace items: delete old → insert new
   const { error: delErr } = await (supabase as unknown as AnyRecord)
     .from("order_items")
     .delete()
@@ -148,7 +157,7 @@ export async function updateOrder(
   if (insErr) throw insErr;
 }
 
-/** Update order status — enforces lifecycle rules */
+/** Update order status */
 export async function updateOrderStatus(
   id: string,
   status: OrderStatus,
@@ -197,22 +206,24 @@ export async function reportIssue(
 // MENU
 // ══════════════════════════════════════════════════════════════
 
-export async function getMenuCategories(): Promise<MenuCategory[]> {
-  const { data, error } = await (supabase as unknown as AnyRecord)
+export async function getMenuCategories(restaurantId: string | null): Promise<MenuCategory[]> {
+  let q: AnyRecord = (supabase as unknown as AnyRecord)
     .from("menu_categories")
     .select("*")
     .eq("is_active", true)
     .order("sort_order");
+  q = withRestaurant(q, restaurantId);
+  const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as MenuCategory[];
 }
 
-export async function getMenuItems(categoryId?: string): Promise<MenuItem[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let q: any = (supabase as unknown as AnyRecord)
+export async function getMenuItems(restaurantId: string | null, categoryId?: string): Promise<MenuItem[]> {
+  let q: AnyRecord = (supabase as unknown as AnyRecord)
     .from("menu_items")
     .select("*, category:menu_categories(id,name,icon)")
     .order("sort_order");
+  q = withRestaurant(q, restaurantId);
   if (categoryId) q = q.eq("category_id", categoryId);
   const { data, error } = await q;
   if (error) throw error;
@@ -234,12 +245,14 @@ export async function toggleMenuItemAvailability(
 // DELIVERY AREAS
 // ══════════════════════════════════════════════════════════════
 
-export async function getDeliveryAreas(): Promise<DeliveryArea[]> {
-  const { data, error } = await (supabase as unknown as AnyRecord)
+export async function getDeliveryAreas(restaurantId: string | null): Promise<DeliveryArea[]> {
+  let q: AnyRecord = (supabase as unknown as AnyRecord)
     .from("delivery_areas")
     .select("*")
     .eq("is_active", true)
     .order("sort_order");
+  q = withRestaurant(q, restaurantId);
+  const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as DeliveryArea[];
 }
@@ -248,20 +261,24 @@ export async function getDeliveryAreas(): Promise<DeliveryArea[]> {
 // CANCELLATION / ISSUE REASONS
 // ══════════════════════════════════════════════════════════════
 
-export async function getCancellationReasons(): Promise<CancellationReason[]> {
-  const { data, error } = await (supabase as unknown as AnyRecord)
+export async function getCancellationReasons(restaurantId: string | null): Promise<CancellationReason[]> {
+  let q: AnyRecord = (supabase as unknown as AnyRecord)
     .from("cancellation_reasons")
     .select("*")
     .eq("is_active", true);
+  q = withRestaurant(q, restaurantId);
+  const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as CancellationReason[];
 }
 
-export async function getIssueReasons(): Promise<IssueReason[]> {
-  const { data, error } = await (supabase as unknown as AnyRecord)
+export async function getIssueReasons(restaurantId: string | null): Promise<IssueReason[]> {
+  let q: AnyRecord = (supabase as unknown as AnyRecord)
     .from("issue_reasons")
     .select("*")
     .eq("is_active", true);
+  q = withRestaurant(q, restaurantId);
+  const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as IssueReason[];
 }
@@ -270,21 +287,25 @@ export async function getIssueReasons(): Promise<IssueReason[]> {
 // PROFILES / DRIVERS
 // ══════════════════════════════════════════════════════════════
 
-export async function getDrivers(): Promise<Profile[]> {
-  const { data, error } = await (supabase as unknown as AnyRecord)
+export async function getDrivers(restaurantId: string | null): Promise<Profile[]> {
+  let q: AnyRecord = (supabase as unknown as AnyRecord)
     .from("profiles")
     .select("*")
     .eq("role", "delivery")
     .eq("is_active", true);
+  q = withRestaurant(q, restaurantId);
+  const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as Profile[];
 }
 
-export async function getAllProfiles(): Promise<Profile[]> {
-  const { data, error } = await (supabase as unknown as AnyRecord)
+export async function getAllProfiles(restaurantId: string | null): Promise<Profile[]> {
+  let q: AnyRecord = (supabase as unknown as AnyRecord)
     .from("profiles")
     .select("*")
     .order("created_at");
+  q = withRestaurant(q, restaurantId);
+  const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as Profile[];
 }
@@ -302,9 +323,16 @@ export async function toggleProfileActive(id: string, is_active: boolean): Promi
 // ══════════════════════════════════════════════════════════════
 
 export async function upsertDeliveryArea(
-  area: { id?: string; name: string; fee: number; is_active?: boolean; sort_order?: number }
+  area: { id?: string; name: string; fee: number; is_active?: boolean; sort_order?: number },
+  restaurantId: string | null
 ): Promise<DeliveryArea> {
-  const row = { name: area.name, fee: area.fee, is_active: area.is_active ?? true, sort_order: area.sort_order ?? 0 };
+  const row = {
+    name: area.name,
+    fee: area.fee,
+    is_active: area.is_active ?? true,
+    sort_order: area.sort_order ?? 0,
+    restaurant_id: restaurantId,
+  };
   if (area.id) {
     const { data, error } = await (supabase as unknown as AnyRecord)
       .from("delivery_areas").update(row).eq("id", area.id).select().single();
@@ -328,7 +356,8 @@ export async function deleteDeliveryArea(id: string): Promise<void> {
 // ══════════════════════════════════════════════════════════════
 
 export async function upsertCancellationReason(
-  r: { id?: string; text: string }
+  r: { id?: string; text: string },
+  restaurantId: string | null
 ): Promise<CancellationReason> {
   if (r.id) {
     const { data, error } = await (supabase as unknown as AnyRecord)
@@ -337,7 +366,7 @@ export async function upsertCancellationReason(
     return data as CancellationReason;
   }
   const { data, error } = await (supabase as unknown as AnyRecord)
-    .from("cancellation_reasons").insert({ text: r.text, is_active: true }).select().single();
+    .from("cancellation_reasons").insert({ text: r.text, is_active: true, restaurant_id: restaurantId }).select().single();
   if (error) throw error;
   return data as CancellationReason;
 }
@@ -353,7 +382,8 @@ export async function deleteCancellationReason(id: string): Promise<void> {
 // ══════════════════════════════════════════════════════════════
 
 export async function upsertIssueReason(
-  r: { id?: string; text: string }
+  r: { id?: string; text: string },
+  restaurantId: string | null
 ): Promise<IssueReason> {
   if (r.id) {
     const { data, error } = await (supabase as unknown as AnyRecord)
@@ -362,7 +392,7 @@ export async function upsertIssueReason(
     return data as IssueReason;
   }
   const { data, error } = await (supabase as unknown as AnyRecord)
-    .from("issue_reasons").insert({ text: r.text, is_active: true }).select().single();
+    .from("issue_reasons").insert({ text: r.text, is_active: true, restaurant_id: restaurantId }).select().single();
   if (error) throw error;
   return data as IssueReason;
 }

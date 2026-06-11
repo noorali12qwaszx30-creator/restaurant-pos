@@ -7,15 +7,23 @@ import type { Profile } from "./types";
 
 // ── Helpers ────────────────────────────────────────────────────
 function profileToUserProfile(p: Profile): UserProfile {
+  const roles: UserRole[] = Array.isArray(p.roles) && p.roles.length > 0
+    ? p.roles as UserRole[]
+    : [p.role as UserRole];
+
+  const isSuperAdmin = roles.includes("super_admin");
+
   return {
-    uid: p.id,
-    username: p.username,
-    email: "",                     // not stored in profiles; comes from auth.users
-    displayName: p.display_name,
-    roles: [p.role as UserRole],
-    isActive: p.is_active,
-    createdAt: new Date(p.created_at),
-    updatedAt: new Date(p.updated_at),
+    uid:          p.id,
+    username:     p.username,
+    email:        "",          // not stored in profiles; comes from auth.users
+    displayName:  p.display_name,
+    roles,
+    isActive:     p.is_active,
+    restaurantId: isSuperAdmin ? null : (p.restaurant_id ?? null),
+    isSuperAdmin,
+    createdAt:    new Date(p.created_at),
+    updatedAt:    new Date(p.updated_at),
   };
 }
 
