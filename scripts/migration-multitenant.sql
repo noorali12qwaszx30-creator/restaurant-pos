@@ -1,6 +1,6 @@
 -- ============================================================
--- Multi-Tenant Migration
--- Run this in Supabase SQL editor
+-- Multi-Tenant Migration v2
+-- Run in Supabase SQL editor or via node scripts/db.cjs
 -- ============================================================
 
 -- 1. جدول المطاعم
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS restaurants (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 2. إضافة super_admin للـ enum
+-- 2. إضافة super_admin للـ enum إذا لم يكن موجوداً
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -26,39 +26,40 @@ BEGIN
   END IF;
 END$$;
 
--- 3. إضافة restaurant_id لجدول profiles
+-- 3. إضافة عمود roles[] للـ profiles (إذا لم يكن موجوداً)
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS roles TEXT[] NOT NULL DEFAULT '{}';
+
+-- 4. نسخ القيمة الحالية من role إلى roles للسجلات الموجودة
+UPDATE profiles
+SET roles = ARRAY[role::TEXT]
+WHERE roles = '{}' OR roles IS NULL;
+
+-- 5. إضافة restaurant_id لكل الجداول
 ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS restaurant_id UUID REFERENCES restaurants(id) ON DELETE SET NULL;
 
--- 4. إضافة restaurant_id لجدول orders
 ALTER TABLE orders
   ADD COLUMN IF NOT EXISTS restaurant_id UUID REFERENCES restaurants(id) ON DELETE CASCADE;
 
--- 5. إضافة restaurant_id لجدول menu_categories
 ALTER TABLE menu_categories
   ADD COLUMN IF NOT EXISTS restaurant_id UUID REFERENCES restaurants(id) ON DELETE CASCADE;
 
--- 6. إضافة restaurant_id لجدول menu_items
 ALTER TABLE menu_items
   ADD COLUMN IF NOT EXISTS restaurant_id UUID REFERENCES restaurants(id) ON DELETE CASCADE;
 
--- 7. إضافة restaurant_id لجدول delivery_areas
 ALTER TABLE delivery_areas
   ADD COLUMN IF NOT EXISTS restaurant_id UUID REFERENCES restaurants(id) ON DELETE CASCADE;
 
--- 8. إضافة restaurant_id لجدول cancellation_reasons
 ALTER TABLE cancellation_reasons
   ADD COLUMN IF NOT EXISTS restaurant_id UUID REFERENCES restaurants(id) ON DELETE CASCADE;
 
--- 9. إضافة restaurant_id لجدول issue_reasons
 ALTER TABLE issue_reasons
   ADD COLUMN IF NOT EXISTS restaurant_id UUID REFERENCES restaurants(id) ON DELETE CASCADE;
 
--- 10. إضافة restaurant_id لجدول activity_logs
 ALTER TABLE activity_logs
   ADD COLUMN IF NOT EXISTS restaurant_id UUID REFERENCES restaurants(id) ON DELETE CASCADE;
 
--- 11. إضافة restaurant_id لجدول push_tokens
 ALTER TABLE push_tokens
   ADD COLUMN IF NOT EXISTS restaurant_id UUID REFERENCES restaurants(id) ON DELETE CASCADE;
 
@@ -66,7 +67,6 @@ ALTER TABLE push_tokens
 -- دوال مساعدة
 -- ============================================================
 
--- دالة تُعيد restaurant_id الخاص بالمستخدم الحالي
 CREATE OR REPLACE FUNCTION current_restaurant_id()
 RETURNS UUID
 LANGUAGE sql STABLE SECURITY DEFINER
@@ -74,7 +74,6 @@ AS $$
   SELECT restaurant_id FROM profiles WHERE id = auth.uid() LIMIT 1;
 $$;
 
--- دالة تتحقق إذا كان المستخدم super_admin
 CREATE OR REPLACE FUNCTION is_super_admin()
 RETURNS BOOLEAN
 LANGUAGE sql STABLE SECURITY DEFINER
@@ -117,11 +116,15 @@ CREATE POLICY "profiles_select" ON profiles
 
 DROP POLICY IF EXISTS "profiles_update_self" ON profiles;
 CREATE POLICY "profiles_update_self" ON profiles
-  FOR UPDATE USING (id = auth.uid());
+  FOR UPDATE USING (id = auth.uid() OR is_super_admin());
 
-DROP POLICY IF EXISTS "profiles_all_super" ON profiles;
-CREATE POLICY "profiles_all_super" ON profiles
-  FOR ALL USING (is_super_admin());
+DROP POLICY IF EXISTS "profiles_insert_super" ON profiles;
+CREATE POLICY "profiles_insert_super" ON profiles
+  FOR INSERT WITH CHECK (is_super_admin() OR current_restaurant_id() IS NOT NULL);
+
+DROP POLICY IF EXISTS "profiles_delete_super" ON profiles;
+CREATE POLICY "profiles_delete_super" ON profiles
+  FOR DELETE USING (is_super_admin());
 
 -- orders
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
@@ -206,23 +209,9 @@ CREATE POLICY "push_tokens_tenant" ON push_tokens
 -- ============================================================
 -- فهارس للأداء
 -- ============================================================
-CREATE INDEX IF NOT EXISTS idx_orders_restaurant_id         ON orders(restaurant_id);
+CREATE INDEX IF NOT EXISTS idx_orders_restaurant_id          ON orders(restaurant_id);
 CREATE INDEX IF NOT EXISTS idx_menu_categories_restaurant_id ON menu_categories(restaurant_id);
 CREATE INDEX IF NOT EXISTS idx_menu_items_restaurant_id      ON menu_items(restaurant_id);
 CREATE INDEX IF NOT EXISTS idx_delivery_areas_restaurant_id  ON delivery_areas(restaurant_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_restaurant_id        ON profiles(restaurant_id);
 CREATE INDEX IF NOT EXISTS idx_push_tokens_restaurant_id     ON push_tokens(restaurant_id);
-
--- ============================================================
--- مطعم تجريبي افتراضي (للبيانات الموجودة)
--- ============================================================
--- INSERT INTO restaurants (id, name, is_active) VALUES
---   ('00000000-0000-0000-0000-000000000001', 'المطعم الرئيسي', true)
--- ON CONFLICT (id) DO NOTHING;
-
--- تحديث البيانات الموجودة لتربطها بالمطعم الافتراضي:
--- UPDATE orders            SET restaurant_id = '00000000-0000-0000-0000-000000000001' WHERE restaurant_id IS NULL;
--- UPDATE menu_categories   SET restaurant_id = '00000000-0000-0000-0000-000000000001' WHERE restaurant_id IS NULL;
--- UPDATE menu_items        SET restaurant_id = '00000000-0000-0000-0000-000000000001' WHERE restaurant_id IS NULL;
--- UPDATE delivery_areas    SET restaurant_id = '00000000-0000-0000-0000-000000000001' WHERE restaurant_id IS NULL;
--- UPDATE profiles          SET restaurant_id = '00000000-0000-0000-0000-000000000001' WHERE restaurant_id IS NULL AND NOT ('super_admin' = ANY(roles));

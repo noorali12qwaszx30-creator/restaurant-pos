@@ -36,9 +36,6 @@ const ROLES: { id: UserRole; label: string; color: string }[] = [
 
 const ROLE_MAP = Object.fromEntries(ROLES.map(r => [r.id, r]));
 
-const SUPABASE_URL  = import.meta.env.VITE_SUPABASE_URL      as string;
-const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-
 // ── Helpers ────────────────────────────────────────────────────
 function RoleBadge({ role }: { role: UserRole }) {
   const cfg = ROLE_MAP[role];
@@ -335,46 +332,27 @@ function AddUserDialog({
     if (!validate()) return;
     setSaving(true);
     try {
-      // Use a separate client to avoid signing out the current admin
-      const { createClient } = await import("@supabase/supabase-js");
-      const tempClient = createClient(SUPABASE_URL, SUPABASE_ANON);
-
-      const email = `${form.username.toLowerCase()}@restaurant.local`;
-
-      const { data, error: signUpErr } = await tempClient.auth.signUp({
-        email,
-        password: form.password,
-        options: {
-          data: {
-            username:     form.username.toLowerCase(),
-            display_name: form.displayName.trim(),
-            role:         form.role,
-          },
+      const { data, error } = await supabase.functions.invoke("create-user", {
+        body: {
+          username:     form.username.toLowerCase(),
+          password:     form.password,
+          display_name: form.displayName.trim(),
+          role:         form.role,
+          phone:        form.phone.trim() || undefined,
         },
       });
 
-      if (signUpErr) throw signUpErr;
-      if (!data.user) throw new Error("لم يتم إنشاء المستخدم");
-
-      // Update phone if provided (profile was auto-created by trigger)
-      if (form.phone.trim()) {
-        await db
-          .from("profiles")
-          .update({ phone: form.phone.trim() })
-          .eq("id", data.user.id);
-      }
-
-      // Sign out the temp client so its session doesn't linger
-      await tempClient.auth.signOut();
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       onSuccess(`تم إنشاء حساب "${form.displayName}" بنجاح`);
       setForm({ displayName: "", username: "", password: "", phone: "", role: "cashier" });
       setErrors({});
     } catch (err: unknown) {
       const msg = (err as { message?: string }).message ?? "";
-      if (msg.includes("already registered") || msg.includes("already been registered")) {
+      if (msg.includes("already") || msg.includes("duplicate")) {
         onError("اسم المستخدم مسجّل مسبقاً");
-      } else if (msg.includes("Password should")) {
+      } else if (msg.includes("Password") || msg.includes("password")) {
         onError("كلمة المرور ضعيفة، استخدم 6 أحرف على الأقل");
       } else {
         onError("فشل إنشاء الحساب: " + msg);

@@ -71,7 +71,8 @@ export function PublicOnlyRoute() {
   }
 
   if (isAuthenticated && activeRole) {
-    return <Navigate to={`/dashboard/${activeRole}`} replace />;
+    const dest = activeRole === "super_admin" ? "/superadmin" : `/dashboard/${activeRole}`;
+    return <Navigate to={dest} replace />;
   }
 
   if (isAuthenticated && !activeRole) {

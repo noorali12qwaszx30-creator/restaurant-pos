@@ -1,6 +1,6 @@
 /**
- * Edge Function: admin-reset-password
- * يُعيد تعيين كلمة مرور موظف (admin أو super_admin فقط)
+ * Edge Function: delete-user
+ * يحذف مستخدم من Auth + profile
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -56,14 +56,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { userId, password } = await req.json() as { userId: string; password: string };
-
-    if (!userId || !password || password.length < 6) {
-      return new Response(JSON.stringify({ error: "Missing or invalid fields" }), {
+    const { userId } = await req.json() as { userId: string };
+    if (!userId) {
+      return new Response(JSON.stringify({ error: "Missing userId" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    // تحقق أن المستخدم المراد حذفه من نفس المطعم (للـ admin العادي)
     if (!isSuperAdmin) {
       const { data: targetProfile } = await supabaseAdmin
         .from("profiles")
@@ -77,7 +77,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, { password });
+    // حذف من Auth (يحذف profile تلقائياً إذا كان هناك CASCADE أو نحذفه يدوياً)
+    await supabaseAdmin.from("profiles").delete().eq("id", userId);
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },

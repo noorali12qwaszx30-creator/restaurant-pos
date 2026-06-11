@@ -9,6 +9,7 @@ import { DeliveryDashboard } from "@/pages/dashboards/delivery/DeliveryDashboard
 import { TakeawayDashboard } from "@/pages/dashboards/takeaway/TakeawayDashboard";
 import { KitchenDashboard } from "@/pages/dashboards/kitchen/KitchenDashboard";
 import { AdminDashboard } from "@/pages/dashboards/admin/AdminDashboard";
+import { SuperAdminDashboard } from "@/pages/dashboards/superadmin/SuperAdminDashboard";
 
 export function AppRouter() {
   return (
@@ -46,6 +47,11 @@ export function AppRouter() {
       </Route>
       <Route element={<ProtectedRoute requiredRole="admin" />}>
         <Route path="/dashboard/admin/*" element={<AdminDashboard />} />
+      </Route>
+
+      {/* Super Admin — يرى كل المطاعم */}
+      <Route element={<ProtectedRoute requiredRole="super_admin" />}>
+        <Route path="/superadmin/*" element={<SuperAdminDashboard />} />
       </Route>
 
       {/* 404 */}
