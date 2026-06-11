@@ -87,5 +87,5 @@ export const ROLE_ROUTES: Record<UserRole, string> = {
   takeaway:    "/dashboard/takeaway",
   kitchen:     "/dashboard/kitchen",
   admin:       "/dashboard/admin",
-  super_admin: "/dashboard/admin",
+  super_admin: "/superadmin",
 };
