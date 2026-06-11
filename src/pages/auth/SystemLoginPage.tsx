@@ -76,7 +76,7 @@ export function SystemLoginPage() {
           "flex items-center justify-center gap-2 py-4 rounded-2xl border transition-all",
           error ? "border-status-error/60 bg-status-error/5" : code.length > 0 ? "border-primary/40 bg-surface" : "border-border bg-surface"
         )}>
-          {Array.from({ length: Math.max(4, code.length) }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <motion.div
               key={i}
               animate={code[i] ? { scale: [1, 1.25, 1] } : {}}
