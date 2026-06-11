@@ -50,6 +50,29 @@ export async function signIn(
   return profileToUserProfile(profile as Profile);
 }
 
+// ── Code Login ────────────────────────────────────────────────
+export async function loginWithCode(
+  restaurantId: string,
+  loginCode: string
+): Promise<UserProfile> {
+  const { data, error } = await (supabase as unknown as AnyRecord).functions.invoke("code-login", {
+    body: { restaurant_id: restaurantId, login_code: loginCode.trim() },
+  });
+
+  if (error) throw new Error(error.message ?? "فشل الاتصال بالخادم");
+  if (data?.error) throw new Error(data.error);
+
+  const { session, profile } = data as { session: { access_token: string; refresh_token: string }; profile: AnyRecord };
+
+  const { error: sessionError } = await supabase.auth.setSession({
+    access_token: session.access_token,
+    refresh_token: session.refresh_token,
+  });
+  if (sessionError) throw new Error("فشل تفعيل الجلسة");
+
+  return profileToUserProfile(profile as Parameters<typeof profileToUserProfile>[0]);
+}
+
 // ── Sign Out ───────────────────────────────────────────────────
 export async function signOut(): Promise<void> {
   await supabase.auth.signOut();

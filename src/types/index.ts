@@ -66,8 +66,8 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
   },
   admin: {
     id: "admin",
-    label: "مدير",
-    description: "إدارة كاملة للنظام",
+    label: "مدير مطعم",
+    description: "إدارة كاملة للمطعم",
     iconName: "Settings2",
     color: "hsl(271 81% 56%)",
   },

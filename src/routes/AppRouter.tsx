@@ -10,6 +10,7 @@ import { TakeawayDashboard } from "@/pages/dashboards/takeaway/TakeawayDashboard
 import { KitchenDashboard } from "@/pages/dashboards/kitchen/KitchenDashboard";
 import { AdminDashboard } from "@/pages/dashboards/admin/AdminDashboard";
 import { SuperAdminDashboard } from "@/pages/dashboards/superadmin/SuperAdminDashboard";
+import { SystemLoginPage } from "@/pages/auth/SystemLoginPage";
 
 export function AppRouter() {
   return (
@@ -53,6 +54,9 @@ export function AppRouter() {
       <Route element={<ProtectedRoute requiredRole="super_admin" />}>
         <Route path="/superadmin/*" element={<SuperAdminDashboard />} />
       </Route>
+
+      {/* مدخل سري — المدير العام فقط */}
+      <Route path="/sys-9x7k" element={<SystemLoginPage />} />
 
       {/* 404 */}
       <Route path="*" element={<Navigate to="/login" replace />} />

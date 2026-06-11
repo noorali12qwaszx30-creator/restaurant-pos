@@ -4,20 +4,20 @@ import { ROLE_CONFIGS, ROLE_ROUTES, type UserRole } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
   LogOut, ChevronLeft,
-  CreditCard, Map, Bike, ShoppingBag, ChefHat, Settings2,
+  CreditCard, Map, Bike, ShoppingBag, ChefHat, Settings2, Crown,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ROLE_ICONS: Record<string, LucideIcon> = {
-  CreditCard, Map, Bike, ShoppingBag, ChefHat, Settings2,
+  CreditCard, Map, Bike, ShoppingBag, ChefHat, Settings2, Crown,
 };
 
 export function RoleSelectorPage() {
   const { profile, setActiveRole, logout } = useAuth();
   const navigate = useNavigate();
 
-  const availableRoles: UserRole[] = profile?.roles ?? [];
+  const availableRoles: UserRole[] = (profile?.roles ?? []).filter(r => r !== "super_admin");
 
   const handleRoleSelect = (role: UserRole) => {
     setActiveRole(role);

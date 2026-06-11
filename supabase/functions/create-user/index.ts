@@ -1,7 +1,6 @@
 /**
  * Edge Function: create-user
- * ينشئ مستخدم Supabase Auth + profile في جدول profiles
- * يتطلب: JWT من admin أو super_admin
+ * يتطلب فقط: display_name + role (اسم المستخدم وكلمة المرور تُولَّدان تلقائياً)
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -16,35 +15,23 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // ── تحقق من هوية المستدعي ──
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!authHeader) return json({ error: "Unauthorized" }, 401);
 
-    // عميل بصلاحيات المستخدم الحالي (للتحقق من دوره)
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    // عميل Admin (service_role) لإنشاء المستخدمين
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // تحقق أن المستدعي admin أو super_admin
     const { data: { user: caller } } = await supabaseUser.auth.getUser();
-    if (!caller) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!caller) return json({ error: "Unauthorized" }, 401);
 
     const { data: callerProfile } = await supabaseAdmin
       .from("profiles")
@@ -53,39 +40,43 @@ Deno.serve(async (req) => {
       .single();
 
     const isSuperAdmin = callerProfile?.roles?.includes("super_admin");
-    const isAdmin = callerProfile?.roles?.includes("admin");
+    const isAdmin      = callerProfile?.roles?.includes("admin");
+    if (!isSuperAdmin && !isAdmin) return json({ error: "Forbidden" }, 403);
 
-    if (!isSuperAdmin && !isAdmin) {
-      return new Response(JSON.stringify({ error: "Forbidden: admin required" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // ── قراءة بيانات المستخدم الجديد ──
+    // ── المدخلات المطلوبة فقط ──
     const body = await req.json() as {
-      username: string;
-      password: string;
       display_name: string;
       role: string;
-      phone?: string;
       restaurant_id?: string;
     };
 
-    const { username, password, display_name, role, phone, restaurant_id } = body;
+    const { display_name, role } = body;
+    if (!display_name?.trim() || !role) return json({ error: "display_name و role مطلوبان" }, 400);
 
-    if (!username || !password || !display_name || !role) {
-      return new Response(JSON.stringify({ error: "Missing required fields" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const targetRestaurantId: string | null = isSuperAdmin
+      ? (body.restaurant_id ?? null)
+      : (callerProfile?.restaurant_id ?? null);
+
+    // ── توليد كود دخول 10 أرقام فريد ──
+    async function generateLoginCode(restaurantId: string | null): Promise<string> {
+      for (let i = 0; i < 300; i++) {
+        const code = String(Math.floor(1_000_000_000 + Math.random() * 9_000_000_000));
+        let q = supabaseAdmin.from("profiles").select("id").eq("login_code", code);
+        q = restaurantId ? q.eq("restaurant_id", restaurantId) : q.is("restaurant_id", null);
+        const { data } = await q.maybeSingle();
+        if (!data) return code;
+      }
+      throw new Error("فشل توليد كود فريد");
     }
 
-    // admin عادي: يُنشئ فقط في مطعمه
-    const targetRestaurantId = isSuperAdmin
-      ? (restaurant_id ?? null)
-      : callerProfile?.restaurant_id;
+    const loginCode = await generateLoginCode(targetRestaurantId);
 
-    // إنشاء المستخدم في Supabase Auth
-    const email = `${username}@restaurant.local`;
+    // ── توليد بيانات Auth تلقائية ──
+    const uid      = crypto.randomUUID().replace(/-/g, "").slice(0, 12);
+    const username = `emp_${uid}`;
+    const password = crypto.randomUUID(); // لا يُستخدم — الدخول بالكود فقط
+    const email    = `${username}@restaurant.local`;
+
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -93,42 +84,39 @@ Deno.serve(async (req) => {
     });
 
     if (authError || !authData.user) {
-      return new Response(JSON.stringify({ error: authError?.message ?? "Failed to create auth user" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return json({ error: authError?.message ?? "فشل إنشاء الحساب" }, 400);
     }
 
-    // إنشاء profile
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .insert({
-        id: authData.user.id,
+        id:            authData.user.id,
         username,
-        display_name,
+        display_name:  display_name.trim(),
         role,
-        roles: [role],
-        phone: phone ?? null,
-        is_active: true,
+        roles:         [role],
+        is_active:     true,
         restaurant_id: targetRestaurantId,
+        login_code:    loginCode,
       })
       .select()
       .single();
 
     if (profileError) {
-      // حذف المستخدم من Auth إذا فشل إنشاء الـ profile
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-      return new Response(JSON.stringify({ error: profileError.message }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return json({ error: profileError.message }, 400);
     }
 
-    return new Response(JSON.stringify({ success: true, profile }), {
-      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ success: true, profile });
 
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ error: String(err) }, 500);
   }
 });
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}

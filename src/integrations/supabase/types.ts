@@ -29,6 +29,8 @@ export interface Profile {
   is_active: boolean;
   avatar_url: string | null;
   restaurant_id: string | null;
+  login_code: string | null;
+  last_login_at: string | null;
   created_at: string;
   updated_at: string;
 }

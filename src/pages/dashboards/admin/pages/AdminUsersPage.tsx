@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   Plus, Edit2, ToggleLeft, ToggleRight, Search, X,
-  ShieldCheck, Loader2, Trash2, Phone, User,
-  RefreshCw, KeyRound, Eye, EyeOff,
+  Loader2, Trash2, Phone, User,
+  RefreshCw, KeyRound, Eye, EyeOff, Hash, Copy, Check,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -21,12 +21,14 @@ interface StaffProfile {
   phone: string | null;
   role: UserRole;
   is_active: boolean;
+  login_code: string | null;
+  last_login_at: string | null;
   created_at: string;
 }
 
 // ── Constants ──────────────────────────────────────────────────
 const ROLES: { id: UserRole; label: string; color: string }[] = [
-  { id: "admin",    label: "مدير",    color: "bg-amber-500/15 text-amber-600 border-amber-500/30" },
+  { id: "admin",    label: "مدير مطعم", color: "bg-amber-500/15 text-amber-600 border-amber-500/30" },
   { id: "cashier",  label: "كاشير",   color: "bg-blue-500/15 text-blue-600 border-blue-500/30" },
   { id: "kitchen",  label: "مطبخ",    color: "bg-orange-500/15 text-orange-600 border-orange-500/30" },
   { id: "field",    label: "ميداني",  color: "bg-green-500/15 text-green-600 border-green-500/30" },
@@ -44,6 +46,31 @@ function RoleBadge({ role }: { role: UserRole }) {
     <span className={cn("text-[11px] font-semibold border rounded-full px-2 py-0.5 leading-none", cfg.color)}>
       {cfg.label}
     </span>
+  );
+}
+
+function CodeBadge({ code }: { code: string | null }) {
+  const [copied, setCopied] = useState(false);
+  if (!code) return null;
+
+  function copy(e: React.MouseEvent) {
+    e.stopPropagation();
+    navigator.clipboard.writeText(code ?? "").then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
+
+  return (
+    <button
+      onClick={copy}
+      className="flex items-center gap-1 bg-primary/8 border border-primary/20 rounded-lg px-2 py-0.5 text-primary hover:bg-primary/15 transition-all"
+      title="انسخ الكود"
+    >
+      <Hash className="w-3 h-3" />
+      <span className="text-[11px] font-bold tracking-widest">{code}</span>
+      {copied ? <Check className="w-3 h-3 text-status-success" /> : <Copy className="w-3 h-3 opacity-50" />}
+    </button>
   );
 }
 
@@ -79,6 +106,7 @@ export function AdminUsersPage() {
     const { data, error } = await db
       .from("profiles")
       .select("*")
+      .not("restaurant_id", "is", null)
       .order("created_at", { ascending: true });
     if (!error && data) setUsers(data as StaffProfile[]);
     setIsLoading(false);
@@ -225,8 +253,9 @@ export function AdminUsersPage() {
                   )}
                 </div>
                 <p className="text-xs text-text-muted mt-0.5">@{user.username}</p>
-                <div className="flex items-center gap-2 mt-1.5">
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                   <RoleBadge role={user.role} />
+                  <CodeBadge code={user.login_code} />
                   {user.phone && (
                     <span className="text-[11px] text-text-muted flex items-center gap-0.5">
                       <Phone className="w-3 h-3" />{user.phone}
@@ -308,145 +337,123 @@ function AddUserDialog({
   onSuccess: (msg: string) => void;
   onError: (msg: string) => void;
 }) {
-  const [form, setForm] = useState({
-    displayName: "",
-    username: "",
-    password: "",
-    phone: "",
-    role: "cashier" as UserRole,
-  });
-  const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [displayName, setDisplayName] = useState("");
+  const [role, setRole]               = useState<UserRole>("cashier");
+  const [nameErr, setNameErr]         = useState("");
+  const [saving, setSaving]           = useState(false);
+  const [createdCode, setCreatedCode] = useState<string | null>(null);
+  const [copied, setCopied]           = useState(false);
 
-  function validate() {
-    const e: Record<string, string> = {};
-    if (!form.displayName.trim()) e.displayName = "الاسم مطلوب";
-    if (!form.username.trim())    e.username    = "اسم المستخدم مطلوب";
-    if (!/^[a-zA-Z0-9_]+$/.test(form.username)) e.username = "أحرف إنجليزية وأرقام فقط";
-    if (form.password.length < 6) e.password = "6 أحرف على الأقل";
-    setErrors(e);
-    return Object.keys(e).length === 0;
+  function reset() {
+    setDisplayName(""); setRole("cashier");
+    setNameErr(""); setCreatedCode(null); setCopied(false);
   }
 
   async function handleSubmit() {
-    if (!validate()) return;
+    if (!displayName.trim()) { setNameErr("الاسم مطلوب"); return; }
     setSaving(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-user", {
-        body: {
-          username:     form.username.toLowerCase(),
-          password:     form.password,
-          display_name: form.displayName.trim(),
-          role:         form.role,
-          phone:        form.phone.trim() || undefined,
-        },
+        body: { display_name: displayName.trim(), role },
       });
-
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-
-      onSuccess(`تم إنشاء حساب "${form.displayName}" بنجاح`);
-      setForm({ displayName: "", username: "", password: "", phone: "", role: "cashier" });
-      setErrors({});
+      setCreatedCode(data?.profile?.login_code ?? null);
+      onSuccess(`تم إنشاء حساب "${displayName.trim()}"`);
     } catch (err: unknown) {
-      const msg = (err as { message?: string }).message ?? "";
-      if (msg.includes("already") || msg.includes("duplicate")) {
-        onError("اسم المستخدم مسجّل مسبقاً");
-      } else if (msg.includes("Password") || msg.includes("password")) {
-        onError("كلمة المرور ضعيفة، استخدم 6 أحرف على الأقل");
-      } else {
-        onError("فشل إنشاء الحساب: " + msg);
-      }
+      onError("فشل إنشاء الحساب: " + ((err as { message?: string }).message ?? ""));
     } finally {
       setSaving(false);
     }
   }
 
-  function set(key: keyof typeof form, val: string) {
-    setForm(p => ({ ...p, [key]: val }));
-    setErrors(p => ({ ...p, [key]: "" }));
+  function copyCode() {
+    if (!createdCode) return;
+    navigator.clipboard.writeText(createdCode).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   }
 
   return (
-    <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
+    <Dialog open={open} onOpenChange={v => { if (!v) { onClose(); reset(); } }}>
       <DialogContent>
         <DialogHeader><DialogTitle>إضافة موظف جديد</DialogTitle></DialogHeader>
         <DialogBody>
-          <div className="flex flex-col gap-3">
-            {/* Display Name */}
-            <Field label="الاسم الكامل" error={errors.displayName}>
-              <input
-                value={form.displayName}
-                onChange={e => set("displayName", e.target.value)}
-                placeholder="مثال: أحمد محمد"
-                className={inputCls(!!errors.displayName)}
-              />
-            </Field>
-
-            {/* Username */}
-            <Field label="اسم المستخدم" error={errors.username}
-              hint="سيُستخدم لتسجيل الدخول (إنجليزي فقط)">
-              <input
-                value={form.username}
-                onChange={e => set("username", e.target.value.toLowerCase())}
-                placeholder="مثال: ahmed2"
-                dir="ltr"
-                className={inputCls(!!errors.username)}
-              />
-            </Field>
-
-            {/* Password */}
-            <Field label="كلمة المرور" error={errors.password}>
-              <input
-                type="password"
-                value={form.password}
-                onChange={e => set("password", e.target.value)}
-                placeholder="6 أحرف على الأقل"
-                dir="ltr"
-                className={inputCls(!!errors.password)}
-              />
-            </Field>
-
-            {/* Phone */}
-            <Field label="رقم الهاتف (اختياري)">
-              <input
-                value={form.phone}
-                onChange={e => set("phone", e.target.value)}
-                placeholder="07xxxxxxxxxx"
-                dir="ltr"
-                className={inputCls(false)}
-              />
-            </Field>
-
-            {/* Role */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-text-secondary">الدور</label>
-              <div className="grid grid-cols-3 gap-2">
-                {ROLES.map(r => (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => set("role", r.id)}
-                    className={cn(
-                      "py-2.5 rounded-xl border text-xs font-semibold transition-all",
-                      form.role === r.id
-                        ? "bg-primary text-primary-foreground border-primary shadow-card"
-                        : "bg-surface-elevated border-border text-text-muted hover:border-primary/30"
-                    )}
-                  >
-                    <ShieldCheck className={cn("w-4 h-4 mx-auto mb-1", form.role === r.id ? "opacity-100" : "opacity-0")} />
-                    {r.label}
-                  </button>
-                ))}
+          {createdCode ? (
+            /* ── عرض الكود بعد الإنشاء ── */
+            <div className="flex flex-col items-center gap-4 py-4 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-status-success/10 flex items-center justify-center">
+                <Check className="w-7 h-7 text-status-success" />
               </div>
+              <div>
+                <p className="font-semibold text-text-primary mb-1">تم إنشاء الحساب بنجاح</p>
+                <p className="text-xs text-text-muted">شارك كود الدخول مع الموظف</p>
+              </div>
+              <button
+                onClick={copyCode}
+                className="flex items-center gap-2 bg-primary/8 border border-primary/25 rounded-2xl px-5 py-3 hover:bg-primary/15 transition-all"
+              >
+                <Hash className="w-4 h-4 text-primary" />
+                <span className="text-xl font-bold tracking-widest text-primary">{createdCode}</span>
+                {copied
+                  ? <Check className="w-4 h-4 text-status-success" />
+                  : <Copy className="w-4 h-4 text-text-muted" />
+                }
+              </button>
+              <p className="text-[11px] text-text-muted">اضغط لنسخ الكود</p>
             </div>
-          </div>
+          ) : (
+            /* ── نموذج الإنشاء ── */
+            <div className="flex flex-col gap-4">
+              <Field label="اسم الموظف" error={nameErr}>
+                <input
+                  value={displayName}
+                  onChange={e => { setDisplayName(e.target.value); setNameErr(""); }}
+                  placeholder="مثال: أحمد محمد"
+                  className={inputCls(!!nameErr)}
+                  autoFocus
+                />
+              </Field>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-text-secondary">الدور</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {ROLES.map(r => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => setRole(r.id)}
+                      className={cn(
+                        "py-2.5 rounded-xl border text-xs font-semibold transition-all",
+                        role === r.id
+                          ? "bg-primary text-primary-foreground border-primary shadow-card"
+                          : "bg-surface-elevated border-border text-text-muted hover:border-primary/30"
+                      )}
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <p className="text-[11px] text-text-muted text-center">
+                سيتم توليد كود دخول مكوّن من 10 أرقام تلقائياً
+              </p>
+            </div>
+          )}
         </DialogBody>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={saving}>إلغاء</Button>
-          <Button onClick={handleSubmit} disabled={saving}>
-            {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> جاري الإنشاء...</> : "إنشاء الحساب"}
-          </Button>
+          {createdCode ? (
+            <Button className="w-full" onClick={() => { reset(); onClose(); }}>إغلاق</Button>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => { reset(); onClose(); }} disabled={saving}>إلغاء</Button>
+              <Button onClick={handleSubmit} disabled={saving}>
+                {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> جاري الإنشاء...</> : "إنشاء"}
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

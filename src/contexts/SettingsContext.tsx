@@ -60,13 +60,13 @@ const DEV_ISSUES: IssueReason[] = [
   { id:"i5",text:"سائق غير متجاوب",   is_active:true, restaurant_id:null, created_at:"" },
 ];
 const DEV_PROFILES: Profile[] = [
-  { id:"p1", username:"admin",    display_name:"مدير النظام",   role:"admin",    roles:["admin"],    is_active:true, phone:null, avatar_url:null, restaurant_id:null, created_at:"", updated_at:"" },
-  { id:"p2", username:"cashier1", display_name:"كاشير 1",       role:"cashier",  roles:["cashier"],  is_active:true, phone:null, avatar_url:null, restaurant_id:null, created_at:"", updated_at:"" },
-  { id:"p3", username:"cashier2", display_name:"كاشير 2",       role:"cashier",  roles:["cashier"],  is_active:true, phone:null, avatar_url:null, restaurant_id:null, created_at:"", updated_at:"" },
-  { id:"p4", username:"field1",   display_name:"موظف الميدان",  role:"field",    roles:["field"],    is_active:true, phone:null, avatar_url:null, restaurant_id:null, created_at:"", updated_at:"" },
-  { id:"p5", username:"driver1",  display_name:"سائق 1",        role:"delivery", roles:["delivery"], is_active:true, phone:"0501111111", avatar_url:null, restaurant_id:null, created_at:"", updated_at:"" },
-  { id:"p6", username:"driver2",  display_name:"سائق 2",        role:"delivery", roles:["delivery"], is_active:false, phone:"0502222222", avatar_url:null, restaurant_id:null, created_at:"", updated_at:"" },
-  { id:"p7", username:"kitchen1", display_name:"طاهٍ 1",        role:"kitchen",  roles:["kitchen"],  is_active:true, phone:null, avatar_url:null, restaurant_id:null, created_at:"", updated_at:"" },
+  { id:"p1", username:"admin",    display_name:"مدير النظام",   role:"admin",    roles:["admin"],    is_active:true, phone:null, avatar_url:null, restaurant_id:null, created_at:"", updated_at:"", login_code:null, last_login_at:null },
+  { id:"p2", username:"cashier1", display_name:"كاشير 1",       role:"cashier",  roles:["cashier"],  is_active:true, phone:null, avatar_url:null, restaurant_id:null, created_at:"", updated_at:"", login_code:null, last_login_at:null },
+  { id:"p3", username:"cashier2", display_name:"كاشير 2",       role:"cashier",  roles:["cashier"],  is_active:true, phone:null, avatar_url:null, restaurant_id:null, created_at:"", updated_at:"", login_code:null, last_login_at:null },
+  { id:"p4", username:"field1",   display_name:"موظف الميدان",  role:"field",    roles:["field"],    is_active:true, phone:null, avatar_url:null, restaurant_id:null, created_at:"", updated_at:"", login_code:null, last_login_at:null },
+  { id:"p5", username:"driver1",  display_name:"سائق 1",        role:"delivery", roles:["delivery"], is_active:true, phone:"0501111111", avatar_url:null, restaurant_id:null, created_at:"", updated_at:"", login_code:null, last_login_at:null },
+  { id:"p6", username:"driver2",  display_name:"سائق 2",        role:"delivery", roles:["delivery"], is_active:false, phone:"0502222222", avatar_url:null, restaurant_id:null, created_at:"", updated_at:"", login_code:null, last_login_at:null },
+  { id:"p7", username:"kitchen1", display_name:"طاهٍ 1",        role:"kitchen",  roles:["kitchen"],  is_active:true, phone:null, avatar_url:null, restaurant_id:null, created_at:"", updated_at:"", login_code:null, last_login_at:null },
 ];
 
 /* ── Context type ──────────────────────────────────────────── */
