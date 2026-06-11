@@ -231,23 +231,38 @@ function AddRestaurantDialog({ open, onClose, onSuccess, onError }: {
   open: boolean; onClose: () => void;
   onSuccess: (msg: string) => void; onError: (msg: string) => void;
 }) {
-  const [form, setForm] = useState({ name: "", phone: "", address: "" });
-  const [saving, setSaving] = useState(false);
-  const [err, setErr] = useState("");
+  const [form, setForm]         = useState({ name: "", phone: "", address: "", adminName: "" });
+  const [saving, setSaving]     = useState(false);
+  const [nameErr, setNameErr]   = useState("");
+  const [adminErr, setAdminErr] = useState("");
+  const [createdCode, setCreatedCode] = useState<string | null>(null);
+  const [copied, setCopied]     = useState(false);
+
+  function reset() { setForm({ name: "", phone: "", address: "", adminName: "" }); setCreatedCode(null); setCopied(false); }
 
   async function handleSubmit() {
-    if (!form.name.trim()) { setErr("اسم المطعم مطلوب"); return; }
+    if (!form.name.trim())      { setNameErr("اسم المطعم مطلوب"); return; }
+    if (!form.adminName.trim()) { setAdminErr("اسم المدير مطلوب"); return; }
     setSaving(true);
     try {
-      const { data, error } = await db.from("restaurants").insert({
+      // 1. إنشاء المطعم
+      const { data: rest, error: restErr } = await db.from("restaurants").insert({
         name:    form.name.trim(),
         phone:   form.phone.trim() || null,
         address: form.address.trim() || null,
         is_active: true,
       }).select().single();
-      if (error) throw error;
-      onSuccess(`"${data.name}" — ID: ${data.id.slice(0,8)}...`);
-      setForm({ name: "", phone: "", address: "" });
+      if (restErr) throw restErr;
+
+      // 2. إنشاء حساب المدير
+      const { data: userData, error: fnErr } = await supabase.functions.invoke("create-user", {
+        body: { display_name: form.adminName.trim(), role: "admin", restaurant_id: rest.id },
+      });
+      if (fnErr) throw fnErr;
+      if (userData?.error) throw new Error(userData.error);
+
+      setCreatedCode(userData?.profile?.login_code ?? null);
+      onSuccess(`"${rest.name}" + مدير "${form.adminName}"`);
     } catch (e: unknown) {
       onError((e as { message?: string }).message ?? "خطأ غير معروف");
     } finally {
@@ -255,31 +270,71 @@ function AddRestaurantDialog({ open, onClose, onSuccess, onError }: {
     }
   }
 
+  function copyCode() {
+    if (!createdCode) return;
+    navigator.clipboard.writeText(createdCode).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
+  }
+
   return (
-    <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
+    <Dialog open={open} onOpenChange={v => { if (!v) { reset(); onClose(); } }}>
       <DialogContent>
         <DialogHeader><DialogTitle className="flex items-center gap-2"><Building2 className="w-4 h-4 text-primary" />إنشاء مطعم جديد</DialogTitle></DialogHeader>
         <DialogBody>
-          <div className="flex flex-col gap-3">
-            <F label="اسم المطعم *" error={err}>
-              <input value={form.name} onChange={e => { setForm(p=>({...p,name:e.target.value})); setErr(""); }}
-                placeholder="مثال: مطعم الأصالة" className={iCls(!!err)} autoFocus />
-            </F>
-            <F label="رقم الهاتف">
-              <input value={form.phone} onChange={e => setForm(p=>({...p,phone:e.target.value}))}
-                placeholder="07xxxxxxxxxx" dir="ltr" className={iCls(false)} />
-            </F>
-            <F label="العنوان">
-              <input value={form.address} onChange={e => setForm(p=>({...p,address:e.target.value}))}
-                placeholder="المدينة، الحي..." className={iCls(false)} />
-            </F>
-          </div>
+          {createdCode ? (
+            <div className="flex flex-col items-center gap-4 py-2 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-status-success/10 flex items-center justify-center">
+                <Check className="w-7 h-7 text-status-success" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-text-primary">تم إنشاء المطعم والمدير</p>
+                <p className="text-xs text-text-muted mt-1">{form.name} · {form.adminName}</p>
+              </div>
+              <button onClick={copyCode} className="flex items-center gap-2 bg-primary/10 border border-primary/25 rounded-2xl px-5 py-3 hover:bg-primary/20 transition-all">
+                <Hash className="w-4 h-4 text-primary" />
+                <span className="text-lg font-black tracking-widest text-primary font-mono">{createdCode}</span>
+                {copied ? <Check className="w-4 h-4 text-status-success" /> : <Copy className="w-4 h-4 text-text-muted" />}
+              </button>
+              <p className="text-[11px] text-text-muted">كود دخول المدير — انسخه وشاركه معه</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {/* بيانات المطعم */}
+              <p className="text-[11px] font-bold text-text-muted uppercase tracking-wider">بيانات المطعم</p>
+              <F label="اسم المطعم *" error={nameErr}>
+                <input value={form.name} onChange={e => { setForm(p=>({...p,name:e.target.value})); setNameErr(""); }}
+                  placeholder="مثال: مطعم الأصالة" className={iCls(!!nameErr)} autoFocus />
+              </F>
+              <F label="رقم الهاتف">
+                <input value={form.phone} onChange={e => setForm(p=>({...p,phone:e.target.value}))}
+                  placeholder="07xxxxxxxxxx" dir="ltr" className={iCls(false)} />
+              </F>
+              <F label="العنوان">
+                <input value={form.address} onChange={e => setForm(p=>({...p,address:e.target.value}))}
+                  placeholder="المدينة، الحي..." className={iCls(false)} />
+              </F>
+              {/* بيانات المدير */}
+              <div className="border-t border-border pt-3 mt-1">
+                <p className="text-[11px] font-bold text-text-muted uppercase tracking-wider mb-3">حساب المدير</p>
+                <F label="اسم المدير *" error={adminErr}>
+                  <input value={form.adminName} onChange={e => { setForm(p=>({...p,adminName:e.target.value})); setAdminErr(""); }}
+                    placeholder="مثال: أحمد محمد" className={iCls(!!adminErr)} />
+                </F>
+                <p className="text-[11px] text-text-muted mt-2">سيتم توليد كود دخول من 10 أرقام تلقائياً</p>
+              </div>
+            </div>
+          )}
         </DialogBody>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={saving}>إلغاء</Button>
-          <Button onClick={handleSubmit} disabled={saving}>
-            {saving ? <><Loader2 className="w-4 h-4 animate-spin" />جاري الإنشاء...</> : "إنشاء المطعم"}
-          </Button>
+          {createdCode ? (
+            <Button className="w-full" onClick={() => { reset(); onClose(); }}>إغلاق</Button>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => { reset(); onClose(); }} disabled={saving}>إلغاء</Button>
+              <Button onClick={handleSubmit} disabled={saving}>
+                {saving ? <><Loader2 className="w-4 h-4 animate-spin" />جاري الإنشاء...</> : "إنشاء"}
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
