@@ -11,6 +11,7 @@ const db = supabase as any;
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useNotify } from "@/components/notifications/NotificationContext";
+import { useAuth } from "@/contexts/AuthContext";
 import type { UserRole } from "@/types";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -96,21 +97,25 @@ export function AdminUsersPage() {
   const [filterRole, setFilterRole] = useState<UserRole | "all">("all");
 
   const { notify } = useNotify();
+  const { profile } = useAuth();
+  const restaurantId = profile?.restaurantId ?? null;
   const [addOpen,    setAddOpen]    = useState(false);
   const [editUser,   setEditUser]   = useState<StaffProfile | null>(null);
   const [resetUser,  setResetUser]  = useState<StaffProfile | null>(null);
 
   // ── Load ──
   const loadUsers = useCallback(async () => {
+    if (!restaurantId) return;
     setIsLoading(true);
     const { data, error } = await db
       .from("profiles")
       .select("*")
-      .not("restaurant_id", "is", null)
+      .eq("restaurant_id", restaurantId)
+      .not("roles", "cs", '["super_admin"]')
       .order("created_at", { ascending: true });
     if (!error && data) setUsers(data as StaffProfile[]);
     setIsLoading(false);
-  }, []);
+  }, [restaurantId]);
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
 
