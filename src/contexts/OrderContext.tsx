@@ -21,7 +21,7 @@ export interface LiveOrder {
   id: string;
   orderNumber?: number;
   type: "delivery" | "takeaway" | "dine_in" | "pickup";
-  status: "pending" | "preparing" | "ready" | "delivering" | "delivered" | "cancelled" | "out_for_delivery";
+  status: "pending" | "preparing" | "ready" | "assigned" | "delivering" | "delivered" | "cancelled" | "out_for_delivery";
   source?: string;
   subtotal: number;
   deliveryFee: number;
@@ -102,6 +102,7 @@ interface OrderContextValue {
   markPreparing: (orderId: string) => Promise<void>;
   markReady: (orderId: string) => Promise<void>;
   assignAndDispatch: (orderId: string, driverId: string, driverName: string) => Promise<void>;
+  acceptOrder: (orderId: string) => Promise<void>;
   markDelivered: (orderId: string) => Promise<void>;
   editOrder: (orderId: string, patch: Partial<Pick<LiveOrder, "customerName"|"customerPhone"|"deliveryAddress"|"notes"|"subtotal"|"deliveryFee"|"tax"|"total"|"items">>) => Promise<void>;
   cancelOrder: (orderId: string, reason: string, cancelledBy?: string) => Promise<void>;
@@ -276,10 +277,20 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const assignAndDispatch = useCallback(async (
     orderId: string, driverId: string, driverName: string
   ) => {
-    patchLocal(orderId, { status: "delivering", driverId, driverName, deliveringAt: new Date() });
+    // يعيّن السائق لكن ينتظر قبوله — حالة "assigned" وليس "delivering"
+    patchLocal(orderId, { status: "assigned", driverId, driverName });
     if (!IS_DEV_MODE) {
       const { assignDriver } = await import("@/integrations/supabase/queries");
       await assignDriver(orderId, driverId);
+    }
+  }, []);
+
+  const acceptOrder = useCallback(async (orderId: string) => {
+    // السائق يقبل الطلب → ينتقل لـ "delivering"
+    patchLocal(orderId, { status: "delivering", deliveringAt: new Date() });
+    if (!IS_DEV_MODE) {
+      const { updateOrderStatus } = await import("@/integrations/supabase/queries");
+      await updateOrderStatus(orderId, "delivering");
     }
   }, []);
 
@@ -343,7 +354,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     <OrderContext.Provider value={{
       orders, isLoading, loadError,
       addOrder, editOrder, markPreparing, markReady,
-      assignAndDispatch, markDelivered, cancelOrder, reportIssue,
+      assignAndDispatch, acceptOrder, markDelivered, cancelOrder, reportIssue,
       refetch: () => loadOrders(true),
     }}>
       {children}

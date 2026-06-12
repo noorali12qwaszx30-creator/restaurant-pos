@@ -156,7 +156,7 @@ export function FieldOrdersPage() {
   const { orders, assignAndDispatch } = useOrders();
 
   const readyOrders = useMemo(
-    () => orders.filter(o => o.type === "delivery" && o.status === "ready"),
+    () => orders.filter(o => o.type === "delivery" && (o.status === "ready" || o.status === "assigned")),
     [orders]
   );
 
@@ -184,12 +184,17 @@ export function FieldOrdersPage() {
 
       {/* ── Header bar ── */}
       <div className="px-4 pt-3 pb-3 border-b border-border bg-surface flex flex-col gap-2.5">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <CheckCircle2 className="w-4 h-4 text-status-success" />
           <span className="text-sm font-bold text-text-primary">جاهزة للتوصيل</span>
           <span className="text-xs font-bold text-status-success bg-status-success/10 rounded-full px-2 py-0.5 border border-status-success/20">
-            {readyOrders.length}
+            {readyOrders.filter(o => o.status === "ready").length} بدون سائق
           </span>
+          {readyOrders.filter(o => o.status === "assigned").length > 0 && (
+            <span className="text-xs font-bold text-status-warning bg-status-warning/10 rounded-full px-2 py-0.5 border border-status-warning/20">
+              {readyOrders.filter(o => o.status === "assigned").length} تنتظر القبول
+            </span>
+          )}
         </div>
 
         <div className="relative">
@@ -244,10 +249,17 @@ export function FieldOrdersPage() {
               actions={
                 <button
                   onClick={e => { e.stopPropagation(); setAssigning(o); }}
-                  className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary-hover active:scale-[0.97] transition-all"
+                  className={`w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.97] transition-all ${
+                    o.status === "assigned"
+                      ? "bg-status-warning/10 text-status-warning border border-status-warning/30 hover:bg-status-warning/15"
+                      : "bg-primary text-primary-foreground hover:bg-primary-hover"
+                  }`}
                 >
                   <Truck className="w-4 h-4" />
-                  {o.driverName ? `إعادة تعيين · ${o.driverName}` : "اختيار موظف التوصيل"}
+                  {o.status === "assigned"
+                    ? `تغيير السائق · ${o.driverName ?? "—"}`
+                    : "اختيار موظف التوصيل"
+                  }
                 </button>
               }
             />

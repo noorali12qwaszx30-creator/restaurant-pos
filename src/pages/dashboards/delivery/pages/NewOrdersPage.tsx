@@ -1,9 +1,8 @@
-import { useMemo } from "react";
-import { MapPin, Clock, FileText, Phone, MessageCircle, Bike, BellRing } from "lucide-react";
+import { useState, useMemo } from "react";
+import { MapPin, Clock, FileText, Phone, MessageCircle, Bike, BellRing, CheckCircle2, Loader2 } from "lucide-react";
 import { useOrders, type LiveOrder } from "@/contexts/OrderContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { EmptyState } from "@/components/dashboard/EmptyState";
-
 
 function waitedLabel(d: Date) {
   const m = Math.floor((Date.now() - d.getTime()) / 60000);
@@ -26,7 +25,17 @@ function ContactButtons({ phone }: { phone?: string }) {
   );
 }
 
-function NewOrderCard({ order }: { order: LiveOrder }) {
+function NewOrderCard({ order, onAccept }: { order: LiveOrder; onAccept: () => Promise<void> }) {
+  const [loading, setLoading] = useState(false);
+
+  async function handleAccept() {
+    setLoading(true);
+    await onAccept();
+    setLoading(false);
+  }
+
+  const isPending = order.status === "assigned";
+
   return (
     <div className="bg-surface border-2 border-primary/30 rounded-3xl overflow-hidden shadow-elevated animate-in">
       {/* Animated top strip */}
@@ -44,7 +53,7 @@ function NewOrderCard({ order }: { order: LiveOrder }) {
               </span>
             </div>
             <span className="text-xs text-text-muted flex items-center gap-1.5 mt-2 num">
-              <Clock className="w-3 h-3" />{waitedLabel(order.deliveringAt ?? order.createdAt)}
+              <Clock className="w-3 h-3" />{waitedLabel(order.createdAt)}
             </span>
           </div>
           <div className="text-left">
@@ -80,7 +89,7 @@ function NewOrderCard({ order }: { order: LiveOrder }) {
           </div>
         )}
 
-        {/* Items — fixed 5 slots */}
+        {/* Items */}
         <div className="rounded-xl border border-border/60 overflow-hidden">
           {Array.from({ length: 5 }).map((_, idx) => {
             const item = order.items[idx];
@@ -114,31 +123,43 @@ function NewOrderCard({ order }: { order: LiveOrder }) {
         {/* Contact */}
         <ContactButtons phone={order.customerPhone} />
 
-        {/* Info note */}
-        <p className="text-[11px] text-text-muted text-center bg-surface-elevated rounded-xl py-2 border border-border/50">
-          انتقل إلى تبويب "طلباتي" لتأكيد التسليم
-        </p>
+        {/* ── زر القبول (للطلبات المعيّنة فقط) ── */}
+        {isPending && (
+          <button
+            onClick={handleAccept}
+            disabled={loading}
+            className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-bold text-base flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.98] transition-all shadow-elevated"
+          >
+            {loading
+              ? <Loader2 className="w-5 h-5 animate-spin" />
+              : <><CheckCircle2 className="w-5 h-5" /> قبول الطلب والانطلاق</>
+            }
+          </button>
+        )}
+
+        {!isPending && (
+          <p className="text-[11px] text-text-muted text-center bg-surface-elevated rounded-xl py-2 border border-border/50">
+            انتقل إلى تبويب "طلباتي" لتأكيد التسليم
+          </p>
+        )}
       </div>
     </div>
   );
 }
 
 export function NewOrdersPage() {
-  const { orders } = useOrders();
+  const { orders, acceptOrder } = useOrders();
   const { profile } = useAuth();
   const driverId = profile?.uid ?? "mock-delivery-001";
 
-  // Show delivering orders just assigned to me (dispatched within last hour)
   const myNewOrders = useMemo(() => {
-    const oneHourAgo = Date.now() - 60 * 60 * 1000;
     return orders.filter(o =>
       (o.driverId === driverId || o.driverId === "mock-delivery-001") &&
-      o.status === "delivering" &&
-      (o.deliveringAt ?? o.updatedAt).getTime() > oneHourAgo
-    ).sort((a, b) =>
-      (b.deliveringAt ?? b.updatedAt).getTime() - (a.deliveringAt ?? a.updatedAt).getTime()
-    );
+      (o.status === "assigned" || o.status === "delivering")
+    ).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }, [orders, driverId]);
+
+  const pendingCount = myNewOrders.filter(o => o.status === "assigned").length;
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-4 pb-6">
@@ -146,18 +167,24 @@ export function NewOrdersPage() {
         <EmptyState
           icon={<Bike className="w-8 h-8" />}
           title="لا توجد طلبات جديدة"
-          description="ستظهر هنا الطلبات المُسندة لك خلال الساعة الأخيرة"
+          description="ستظهر هنا الطلبات المُسندة لك"
         />
       ) : (
         <>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-text-primary">طلبات مُسندة حديثاً</span>
-            <span className="text-xs font-bold text-primary bg-primary/10 rounded-full px-2 py-0.5 border border-primary/20 animate-pulse">
-              {myNewOrders.length}
-            </span>
+            <span className="text-sm font-bold text-text-primary">طلبات مُسندة لك</span>
+            {pendingCount > 0 && (
+              <span className="text-xs font-bold text-white bg-status-error rounded-full px-2 py-0.5 animate-pulse">
+                {pendingCount} تنتظر قبولك
+              </span>
+            )}
           </div>
           {myNewOrders.map(o => (
-            <NewOrderCard key={o.id} order={o} />
+            <NewOrderCard
+              key={o.id}
+              order={o}
+              onAccept={() => acceptOrder(o.id)}
+            />
           ))}
         </>
       )}
