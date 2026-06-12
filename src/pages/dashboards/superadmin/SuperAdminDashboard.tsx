@@ -18,24 +18,24 @@ import { SuperAdminSecurityPage }    from "./pages/SuperAdminSecurityPage";
 import { SuperAdminSettingsPage }    from "./pages/SuperAdminSettingsPage";
 
 const THEME: React.CSSProperties = {
-  "--color-background":        "162 50% 4%",
-  "--color-surface":           "160 42% 7%",
-  "--color-surface-elevated":  "158 33% 11%",
-  "--color-border":            "156 25% 17%",
-  "--color-border-subtle":     "156 22% 12%",
-  "--color-text-primary":      "150 32% 94%",
-  "--color-text-secondary":    "150 17% 64%",
-  "--color-text-muted":        "150 12% 40%",
-  "--color-primary":           "155 90% 44%",
-  "--color-primary-foreground":"160 50% 4%",
-  "--color-primary-hover":     "155 90% 52%",
+  "--color-background":        "120 18% 6%",
+  "--color-surface":           "120 14% 9%",
+  "--color-surface-elevated":  "120 10% 13%",
+  "--color-border":            "120 10% 19%",
+  "--color-border-subtle":     "120 8% 14%",
+  "--color-text-primary":      "120 15% 94%",
+  "--color-text-secondary":    "120 8% 64%",
+  "--color-text-muted":        "120 5% 40%",
+  "--color-primary":           "128 58% 46%",
+  "--color-primary-foreground":"0 0% 100%",
+  "--color-primary-hover":     "128 58% 54%",
   "--color-status-success":    "142 71% 45%",
   "--color-status-error":      "0 72% 51%",
   "--color-status-warning":    "38 92% 50%",
   "--color-status-info":       "199 89% 48%",
-  "--shadow-card":             "0 1px 3px rgba(0,0,0,0.5), 0 0 0 1px rgba(13,196,100,0.04)",
-  "--shadow-elevated":         "0 4px 12px rgba(0,0,0,0.6), 0 0 20px rgba(13,196,100,0.06)",
-  "--shadow-dialog":           "0 20px 40px rgba(0,0,0,0.7), 0 0 40px rgba(13,196,100,0.08)",
+  "--shadow-card":             "0 2px 8px rgba(0,0,0,0.5), 0 0 0 1px rgba(80,200,80,0.04)",
+  "--shadow-elevated":         "0 4px 16px rgba(0,0,0,0.6), 0 0 20px rgba(80,200,80,0.05)",
+  "--shadow-dialog":           "0 20px 40px rgba(0,0,0,0.7), 0 0 40px rgba(80,200,80,0.07)",
 } as React.CSSProperties;
 
 const NAV = [

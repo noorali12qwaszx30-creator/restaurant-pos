@@ -45,10 +45,10 @@ const PLATFORM_INFO = [
 ];
 
 const ACCENT_COLORS = [
+  { name: "أخضر",    value: "128 52% 44%" },
   { name: "زمردي",   value: "155 85% 42%" },
   { name: "ذهبي",    value: "38 95% 52%"  },
   { name: "أزرق",    value: "217 91% 60%" },
-  { name: "أخضر",    value: "142 71% 45%" },
   { name: "بنفسجي",  value: "262 83% 68%" },
   { name: "أحمر",    value: "0 72% 51%"   },
 ];
@@ -77,7 +77,7 @@ export function SuperAdminSettingsPage() {
   const [sessionTimeout, setSessionTimeout] = useState(() => loadSetting("session_timeout", 60));
 
   // ── Appearance ────────────────────────────────────────────
-  const [accentColor, setAccentColor] = useState(() => loadSetting("accent_color", "155 85% 42%"));
+  const [accentColor, setAccentColor] = useState(() => loadSetting("accent_color", "128 52% 44%"));
 
   // Apply accent color on mount + change
   useEffect(() => {
