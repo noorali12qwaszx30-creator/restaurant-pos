@@ -34,8 +34,6 @@ function NewOrderCard({ order, onAccept }: { order: LiveOrder; onAccept: () => P
     setLoading(false);
   }
 
-  const isPending = order.status === "assigned";
-
   return (
     <div className="bg-surface border-2 border-primary/30 rounded-3xl overflow-hidden shadow-elevated animate-in">
       {/* Animated top strip */}
@@ -123,25 +121,17 @@ function NewOrderCard({ order, onAccept }: { order: LiveOrder; onAccept: () => P
         {/* Contact */}
         <ContactButtons phone={order.customerPhone} />
 
-        {/* ── زر القبول (للطلبات المعيّنة فقط) ── */}
-        {isPending && (
-          <button
-            onClick={handleAccept}
-            disabled={loading}
-            className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-bold text-base flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.98] transition-all shadow-elevated"
-          >
-            {loading
-              ? <Loader2 className="w-5 h-5 animate-spin" />
-              : <><CheckCircle2 className="w-5 h-5" /> قبول الطلب والانطلاق</>
-            }
-          </button>
-        )}
-
-        {!isPending && (
-          <p className="text-[11px] text-text-muted text-center bg-surface-elevated rounded-xl py-2 border border-border/50">
-            انتقل إلى تبويب "طلباتي" لتأكيد التسليم
-          </p>
-        )}
+        {/* ── زر القبول ── */}
+        <button
+          onClick={handleAccept}
+          disabled={loading}
+          className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-bold text-base flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.98] transition-all shadow-elevated"
+        >
+          {loading
+            ? <Loader2 className="w-5 h-5 animate-spin" />
+            : <><CheckCircle2 className="w-5 h-5" /> قبول الطلب والانطلاق</>
+          }
+        </button>
       </div>
     </div>
   );
@@ -155,11 +145,11 @@ export function NewOrdersPage() {
   const myNewOrders = useMemo(() => {
     return orders.filter(o =>
       (o.driverId === driverId || o.driverId === "mock-delivery-001") &&
-      (o.status === "assigned" || o.status === "delivering")
+      o.status === "assigned"
     ).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }, [orders, driverId]);
 
-  const pendingCount = myNewOrders.filter(o => o.status === "assigned").length;
+  const pendingCount = myNewOrders.length;
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-4 pb-6">

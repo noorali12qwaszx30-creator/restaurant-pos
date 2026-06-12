@@ -3,7 +3,7 @@
  * يعرض الطلبات التي قبلها السائق وهي في الطريق، مع تغيير السائق وتأكيد التسليم
  */
 import { useState, useMemo } from "react";
-import { Bike, MapPin, Phone, Clock, CheckCircle2, Package, Truck, X, Check } from "lucide-react";
+import { Bike, MapPin, Phone, Clock, Package, Truck, X, Check } from "lucide-react";
 import { useOrders, type LiveOrder } from "@/contexts/OrderContext";
 import { useDrivers } from "@/hooks/useDrivers";
 import { OrderDetailDialog } from "@/components/dashboard/OrderDetailDialog";
@@ -145,22 +145,14 @@ function ChangeDriverModal({
 }
 
 // ── بطاقة الطلب قيد التوصيل ─────────────────────────────────
-function DeliveryCard({ order, onView, onDeliver, onChangeDriver }: {
+function DeliveryCard({ order, onView, onChangeDriver }: {
   order: LiveOrder;
   onView: () => void;
-  onDeliver: () => void;
   onChangeDriver: () => void;
 }) {
-  const [loading, setLoading] = useState(false);
   const startTime = order.deliveringAt ?? order.updatedAt;
   const mins = startTime ? Math.floor((Date.now() - startTime.getTime()) / 60000) : 0;
   const isLate = mins > 40;
-
-  async function handleDeliver() {
-    setLoading(true);
-    await onDeliver();
-    setLoading(false);
-  }
 
   return (
     <div className={cn(
@@ -224,25 +216,13 @@ function DeliveryCard({ order, onView, onDeliver, onChangeDriver }: {
           </div>
         </div>
 
-        {/* الأزرار */}
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={onChangeDriver}
-            className="h-10 rounded-xl border border-border bg-surface-elevated text-text-secondary text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-border transition-all active:scale-[0.97]"
-          >
-            <Truck className="w-3.5 h-3.5" /> تغيير السائق
-          </button>
-          <button
-            onClick={handleDeliver}
-            disabled={loading}
-            className="h-10 rounded-xl bg-status-success text-white font-bold text-xs flex items-center justify-center gap-1.5 disabled:opacity-60 active:scale-[0.97] transition-all"
-          >
-            {loading
-              ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-              : <><CheckCircle2 className="w-3.5 h-3.5" /> تأكيد التسليم</>
-            }
-          </button>
-        </div>
+        {/* زر تغيير السائق فقط */}
+        <button
+          onClick={onChangeDriver}
+          className="w-full h-10 rounded-xl border border-border bg-surface-elevated text-text-secondary text-sm font-semibold flex items-center justify-center gap-2 hover:bg-border transition-all active:scale-[0.97]"
+        >
+          <Truck className="w-4 h-4" /> تغيير السائق
+        </button>
       </div>
     </div>
   );
@@ -250,7 +230,7 @@ function DeliveryCard({ order, onView, onDeliver, onChangeDriver }: {
 
 // ══════════════════════════════════════════════════════════════
 export function FieldDeliveringPage() {
-  const { orders, markDelivered, assignAndDispatch } = useOrders();
+  const { orders, assignAndDispatch } = useOrders();
   const [selected, setSelected]       = useState<LiveOrder | null>(null);
   const [changingDriver, setChanging] = useState<LiveOrder | null>(null);
 
@@ -302,7 +282,6 @@ export function FieldDeliveringPage() {
               key={o.id}
               order={o}
               onView={() => setSelected(o)}
-              onDeliver={() => markDelivered(o.id)}
               onChangeDriver={() => setChanging(o)}
             />
           ))
