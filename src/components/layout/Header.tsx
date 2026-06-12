@@ -48,7 +48,7 @@ export function Header({ role }: HeaderProps) {
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-text-primary leading-tight tracking-tight">
-            Twitter POS
+            النظام للإدارة المتكاملة
           </span>
           <span className="text-[10px] text-text-muted leading-tight font-medium">
             {config.label}

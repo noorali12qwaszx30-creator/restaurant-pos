@@ -4,27 +4,27 @@
 
 /* ─── Design Tokens ─── */
 :root {
-  /* Primary — Rich orange */
-  --color-primary: 25 95% 53%;
+  /* Primary — Emerald Green */
+  --color-primary: 155 70% 34%;
   --color-primary-foreground: 0 0% 100%;
-  --color-primary-hover: 25 95% 46%;
+  --color-primary-hover: 155 70% 28%;
 
   /* Surfaces */
-  --color-background: 220 20% 97%;
+  --color-background: 150 20% 97%;
   --color-surface: 0 0% 100%;
-  --color-surface-elevated: 220 14% 96%;
+  --color-surface-elevated: 150 12% 95%;
 
   /* Borders */
-  --color-border: 220 13% 89%;
-  --color-border-subtle: 220 13% 94%;
+  --color-border: 150 10% 87%;
+  --color-border-subtle: 150 8% 92%;
 
   /* Text */
-  --color-text-primary: 222 47% 11%;
-  --color-text-secondary: 215 25% 35%;
-  --color-text-muted: 215 20% 58%;
+  --color-text-primary: 158 40% 10%;
+  --color-text-secondary: 155 18% 35%;
+  --color-text-muted: 155 14% 55%;
 
   /* Status */
-  --color-status-success: 142 76% 36%;
+  --color-status-success: 142 76% 32%;
   --color-status-warning: 38 92% 50%;
   --color-status-error: 4 86% 58%;
   --color-status-info: 199 89% 42%;
@@ -35,9 +35,9 @@
   --radius-sm: 0.5rem;
 
   /* Elevation */
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-elevated: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
-  --shadow-dialog: 0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
+  --shadow-card: 0 1px 3px rgba(0,60,30,0.06), 0 1px 2px rgba(0,60,30,0.04);
+  --shadow-elevated: 0 4px 6px -1px rgba(0,60,30,0.08), 0 2px 4px -2px rgba(0,60,30,0.06);
+  --shadow-dialog: 0 20px 25px -5px rgba(0,60,30,0.1), 0 8px 10px -6px rgba(0,60,30,0.06);
 
   /* Layout */
   --header-height: 3.75rem;
@@ -45,29 +45,35 @@
 }
 
 .dark {
-  --color-primary: 25 95% 53%;
-  --color-primary-foreground: 0 0% 100%;
-  --color-primary-hover: 25 95% 60%;
+  /* Primary — Bright Emerald */
+  --color-primary: 155 85% 42%;
+  --color-primary-foreground: 160 50% 5%;
+  --color-primary-hover: 155 85% 50%;
 
-  --color-background: 222 20% 8%;
-  --color-surface: 222 18% 11%;
-  --color-surface-elevated: 222 16% 15%;
+  /* Luxury Dark Green Surfaces */
+  --color-background: 160 40% 5%;
+  --color-surface: 158 35% 8%;
+  --color-surface-elevated: 156 28% 12%;
 
-  --color-border: 215 14% 22%;
-  --color-border-subtle: 215 14% 18%;
+  /* Borders */
+  --color-border: 155 22% 18%;
+  --color-border-subtle: 155 20% 13%;
 
-  --color-text-primary: 213 31% 96%;
-  --color-text-secondary: 215 16% 65%;
-  --color-text-muted: 215 16% 47%;
+  /* Text */
+  --color-text-primary: 150 30% 94%;
+  --color-text-secondary: 150 16% 64%;
+  --color-text-muted: 150 12% 42%;
 
+  /* Status */
   --color-status-success: 142 71% 45%;
   --color-status-warning: 38 92% 50%;
   --color-status-error: 4 84% 60%;
   --color-status-info: 199 89% 48%;
 
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.3);
-  --shadow-elevated: 0 4px 6px -1px rgba(0,0,0,0.45), 0 2px 4px -2px rgba(0,0,0,0.35);
-  --shadow-dialog: 0 20px 25px -5px rgba(0,0,0,0.5), 0 8px 10px -6px rgba(0,0,0,0.35);
+  /* Deep green shadows */
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.35);
+  --shadow-elevated: 0 4px 6px -1px rgba(0,0,0,0.55), 0 2px 4px -2px rgba(0,0,0,0.4);
+  --shadow-dialog: 0 20px 25px -5px rgba(0,0,0,0.6), 0 8px 10px -6px rgba(0,0,0,0.45);
 }
 
 /* ─── Base Styles ─── */
@@ -110,22 +116,32 @@
     min-height: 100dvh;
   }
 
-  /* Glass morphism */
+  /* Glass morphism — Emerald tinted */
   .glass {
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.88);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.7);
   }
 
   .dark .glass {
-    background: rgba(20, 24, 35, 0.88);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(8, 16, 12, 0.90);
+    border: 1px solid rgba(13, 196, 100, 0.10);
+    box-shadow: 0 0 0 1px rgba(13, 196, 100, 0.04);
   }
 
-  /* Premium gradient */
+  /* Premium emerald gradient */
   .primary-gradient {
-    background: linear-gradient(135deg, hsl(25 95% 58%) 0%, hsl(15 90% 48%) 100%);
+    background: linear-gradient(135deg, hsl(155 85% 45%) 0%, hsl(162 75% 30%) 100%);
+  }
+
+  /* Green glow effect for premium elements */
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(13, 196, 100, 0.25), 0 0 40px rgba(13, 196, 100, 0.10);
+  }
+
+  .dark .glow-primary {
+    box-shadow: 0 0 24px rgba(13, 196, 100, 0.30), 0 0 48px rgba(13, 196, 100, 0.12);
   }
 
   /* Layered shadows */
@@ -184,18 +200,18 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Subtle background mesh */
+  /* Subtle emerald mesh background */
   .mesh-bg {
     background-image:
-      radial-gradient(at 40% 20%, hsl(var(--color-primary) / 0.06) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, hsl(var(--color-status-info) / 0.04) 0px, transparent 50%),
-      radial-gradient(at 0% 50%, hsl(var(--color-primary) / 0.03) 0px, transparent 50%);
+      radial-gradient(at 40% 20%, hsl(var(--color-primary) / 0.07) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, hsl(155 60% 40% / 0.04) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, hsl(var(--color-primary) / 0.04) 0px, transparent 50%);
   }
 
   /* Status bar left borders */
-  .status-border-pending  { border-right: 3px solid hsl(var(--color-status-warning)); }
-  .status-border-preparing { border-right: 3px solid hsl(var(--color-primary)); }
-  .status-border-ready    { border-right: 3px solid hsl(var(--color-status-success)); }
+  .status-border-pending    { border-right: 3px solid hsl(var(--color-status-warning)); }
+  .status-border-preparing  { border-right: 3px solid hsl(var(--color-primary)); }
+  .status-border-ready      { border-right: 3px solid hsl(var(--color-status-success)); }
   .status-border-delivering { border-right: 3px solid hsl(var(--color-status-info)); }
   .status-border-delivered  { border-right: 3px solid hsl(var(--color-status-success) / 0.5); }
   .status-border-cancelled  { border-right: 3px solid hsl(var(--color-status-error) / 0.5); }
@@ -203,5 +219,15 @@
   /* Focus ring */
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1;
+  }
+
+  /* Emerald shimmer for super admin premium elements */
+  @keyframes emeraldPulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(13, 196, 100, 0.2); }
+    50%       { box-shadow: 0 0 20px rgba(13, 196, 100, 0.4), 0 0 40px rgba(13, 196, 100, 0.15); }
+  }
+
+  .pulse-emerald {
+    animation: emeraldPulse 3s ease-in-out infinite;
   }
 }

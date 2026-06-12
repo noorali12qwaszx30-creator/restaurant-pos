@@ -18,19 +18,24 @@ import { SuperAdminSecurityPage }    from "./pages/SuperAdminSecurityPage";
 import { SuperAdminSettingsPage }    from "./pages/SuperAdminSettingsPage";
 
 const THEME: React.CSSProperties = {
-  "--background":        "240 18% 4%",
-  "--surface":           "240 14% 7%",
-  "--surface-elevated":  "240 12% 11%",
-  "--border":            "240 10% 17%",
-  "--text-primary":      "210 18% 92%",
-  "--text-secondary":    "210 12% 65%",
-  "--text-muted":        "210 8%  38%",
-  "--primary":           "38 95% 52%",
-  "--primary-foreground":"0 0% 5%",
-  "--status-success":    "142 71% 45%",
-  "--status-error":      "0 72% 51%",
-  "--status-warning":    "38 92% 50%",
-  "--status-info":       "199 89% 48%",
+  "--color-background":        "162 50% 4%",
+  "--color-surface":           "160 42% 7%",
+  "--color-surface-elevated":  "158 33% 11%",
+  "--color-border":            "156 25% 17%",
+  "--color-border-subtle":     "156 22% 12%",
+  "--color-text-primary":      "150 32% 94%",
+  "--color-text-secondary":    "150 17% 64%",
+  "--color-text-muted":        "150 12% 40%",
+  "--color-primary":           "155 90% 44%",
+  "--color-primary-foreground":"160 50% 4%",
+  "--color-primary-hover":     "155 90% 52%",
+  "--color-status-success":    "142 71% 45%",
+  "--color-status-error":      "0 72% 51%",
+  "--color-status-warning":    "38 92% 50%",
+  "--color-status-info":       "199 89% 48%",
+  "--shadow-card":             "0 1px 3px rgba(0,0,0,0.5), 0 0 0 1px rgba(13,196,100,0.04)",
+  "--shadow-elevated":         "0 4px 12px rgba(0,0,0,0.6), 0 0 20px rgba(13,196,100,0.06)",
+  "--shadow-dialog":           "0 20px 40px rgba(0,0,0,0.7), 0 0 40px rgba(13,196,100,0.08)",
 } as React.CSSProperties;
 
 const NAV = [

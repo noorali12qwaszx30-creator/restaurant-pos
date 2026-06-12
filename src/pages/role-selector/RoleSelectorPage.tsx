@@ -109,7 +109,7 @@ export function RoleSelectorPage() {
 
       {/* Footer */}
       <footer className="text-center pb-8 pb-safe-bottom">
-        <p className="text-xs text-text-muted">Twitter Restaurant POS &copy; {new Date().getFullYear()}</p>
+        <p className="text-xs text-text-muted">النظام للإدارة المتكاملة &copy; {new Date().getFullYear()}</p>
       </footer>
     </div>
   );
