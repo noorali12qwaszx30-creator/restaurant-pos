@@ -18,6 +18,7 @@ import {
   BotMessageSquare,
   Users,
   Activity,
+  Wallet,
 } from "lucide-react";
 import type { UserRole } from "@/types";
 import { cn } from "@/lib/utils";
@@ -37,10 +38,10 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { to: "/dashboard/cashier/history", label: "السجل",    icon: History },
   ],
   field: [
-    { to: "/dashboard/field",          label: "الرئيسية", icon: LayoutDashboard },
-    { to: "/dashboard/field/orders",   label: "الطلبات",  icon: ClipboardList },
-    { to: "/dashboard/field/issues",   label: "المشاكل",  icon: AlertCircle },
-    { to: "/dashboard/field/profile",  label: "حسابي",    icon: User },
+    { to: "/dashboard/field",               label: "الرئيسية",    icon: LayoutDashboard },
+    { to: "/dashboard/field/orders",        label: "الطلبات",     icon: ClipboardList },
+    { to: "/dashboard/field/delivering",    label: "قيد التوصيل", icon: Bike },
+    { to: "/dashboard/field/accounting",    label: "المحاسبة",    icon: Wallet },
   ],
   delivery: [
     { to: "/dashboard/delivery",          label: "الجديدة",    icon: Package },
