@@ -111,8 +111,9 @@ export function AdminUsersPage() {
       .from("profiles")
       .select("*")
       .eq("restaurant_id", restaurantId)
-      .not("roles", "cs", '["super_admin"]')
+      .neq("role", "super_admin")
       .order("created_at", { ascending: true });
+    if (error) console.error("[AdminUsersPage] loadUsers error:", error);
     if (!error && data) setUsers(data as StaffProfile[]);
     setIsLoading(false);
   }, [restaurantId]);
