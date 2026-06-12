@@ -130,10 +130,10 @@ export function LoginPage() {
         {/* ── الشعار ── */}
         <div className="text-center">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center mx-auto mb-3 shadow-elevated">
-            <span className="text-2xl font-black text-white">ت</span>
+            <span className="text-xl font-black text-white">ن</span>
           </div>
-          <h1 className="text-xl font-bold text-text-primary">تويتر</h1>
-          <p className="text-xs text-text-muted mt-0.5">نظام إدارة المطعم</p>
+          <h1 className="text-xl font-bold text-text-primary">النظام للإدارة المتكاملة</h1>
+          <p className="text-xs text-text-muted mt-0.5">نظام إدارة المطاعم</p>
         </div>
 
         {/* ── اختيار المطعم ── */}
