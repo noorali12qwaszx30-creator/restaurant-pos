@@ -6,14 +6,19 @@ import { useState, useRef } from "react";
 import {
   UtensilsCrossed, Users, MapPin, XCircle, AlertTriangle,
   Bell, ShieldAlert, ToggleLeft, ToggleRight,
-  Plus, Edit2, Check, X, Trash2,
+  Plus, Edit2, Check, X, Trash2, Loader2,
   Leaf, Soup, Flame, Sandwich, CupSoda, Cake,
   CheckCircle2, AlertCircle, ChevronDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useMenuData } from "@/hooks/useMenuData";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
 
 /* ══════════════════════════════════════════════════════════════
    Reusable EditableReasonList
@@ -409,16 +414,75 @@ function NotificationsPanel() {
    5. DANGER PANEL
 ══════════════════════════════════════════════════════════════ */
 function DangerPanel() {
-  const [phase, setPhase] = useState<"idle"|"confirm"|"done">("idle");
+  const { profile } = useAuth();
+  const [phase, setPhase] = useState<"idle"|"confirm"|"loading"|"done"|"error">("idle");
   const [input, setInput] = useState("");
+  const [deletedCount, setDeletedCount] = useState(0);
+  const [errorMsg, setErrorMsg] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const MAGIC = "احذف كل الطلبات";
 
-  return phase === "done" ? (
-    <div className="flex items-center gap-2 text-status-success text-xs py-3 font-medium">
-      <CheckCircle2 className="w-4 h-4" />تم حذف جميع الطلبات بنجاح
+  async function handleDelete() {
+    if (input.trim() !== MAGIC) return;
+    const restaurantId = profile?.restaurantId;
+    if (!restaurantId) { setErrorMsg("لا يوجد مطعم مرتبط"); setPhase("error"); return; }
+
+    setPhase("loading");
+    try {
+      // جلب عدد الطلبات قبل الحذف
+      const { count } = await db
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .eq("restaurant_id", restaurantId);
+
+      // حذف العناصر أولاً (foreign key → orders)
+      const orderIds = await db
+        .from("orders")
+        .select("id")
+        .eq("restaurant_id", restaurantId);
+
+      if (orderIds.data && orderIds.data.length > 0) {
+        const ids = orderIds.data.map((o: { id: string }) => o.id);
+        await db.from("order_items").delete().in("order_id", ids);
+      }
+
+      // حذف الطلبات
+      const { error } = await db
+        .from("orders")
+        .delete()
+        .eq("restaurant_id", restaurantId);
+
+      if (error) throw error;
+
+      setDeletedCount(count ?? 0);
+      setPhase("done");
+    } catch (e: unknown) {
+      setErrorMsg(e instanceof Error ? e.message : "خطأ غير معروف");
+      setPhase("error");
+    }
+  }
+
+  if (phase === "done") return (
+    <div className="flex flex-col items-center gap-2 py-4 text-center">
+      <CheckCircle2 className="w-8 h-8 text-status-success" />
+      <p className="text-sm font-bold text-status-success">تم الحذف بنجاح</p>
+      <p className="text-xs text-text-muted">تم حذف {deletedCount} طلب وجميع عناصرها</p>
+      <button onClick={() => { setPhase("idle"); setInput(""); setDeletedCount(0); }}
+        className="mt-2 text-xs text-text-muted underline">إعادة التعيين</button>
     </div>
-  ) : (
+  );
+
+  if (phase === "error") return (
+    <div className="flex flex-col items-center gap-2 py-4 text-center">
+      <AlertCircle className="w-8 h-8 text-status-error" />
+      <p className="text-sm font-bold text-status-error">فشل الحذف</p>
+      <p className="text-xs text-text-muted">{errorMsg}</p>
+      <button onClick={() => { setPhase("idle"); setInput(""); }}
+        className="mt-2 text-xs text-text-muted underline">رجوع</button>
+    </div>
+  );
+
+  return (
     <div className="flex flex-col gap-3">
       <div className="bg-status-error/5 border border-status-error/20 rounded-xl px-3 py-3">
         <div className="flex items-start gap-2">
@@ -426,7 +490,10 @@ function DangerPanel() {
           <div>
             <p className="text-xs font-bold text-status-error">منطقة خطرة</p>
             <p className="text-[11px] text-text-secondary mt-0.5 leading-relaxed">
-              الإجراءات أدناه لا يمكن التراجع عنها.
+              يحذف جميع الطلبات وعناصرها لهذا المطعم فقط. لا يمكن التراجع.
+            </p>
+            <p className="text-[10px] text-text-muted mt-1">
+              ✓ المنيو والموظفون والإعدادات لن تُمس
             </p>
           </div>
         </div>
@@ -452,10 +519,12 @@ function DangerPanel() {
               className="flex-1 py-2 bg-surface-elevated border border-border rounded-xl text-xs text-text-muted font-medium">
               إلغاء
             </button>
-            <button onClick={() => { if (input.trim() === MAGIC) setPhase("done"); }}
-              disabled={input.trim() !== MAGIC}
-              className="flex-1 py-2 bg-status-error text-white rounded-xl text-xs font-bold disabled:opacity-35 active:scale-[0.97] transition-all">
-              تأكيد الحذف
+            <button onClick={handleDelete}
+              disabled={input.trim() !== MAGIC || phase === "loading"}
+              className="flex-1 py-2 bg-status-error text-white rounded-xl text-xs font-bold disabled:opacity-35 active:scale-[0.97] transition-all flex items-center justify-center gap-1.5">
+              {phase === "loading"
+                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />جارٍ الحذف...</>
+                : "تأكيد الحذف"}
             </button>
           </div>
         </div>
