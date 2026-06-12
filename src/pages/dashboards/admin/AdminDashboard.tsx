@@ -5,8 +5,9 @@ import { AdminOrdersPage }     from "./pages/AdminOrdersPage";
 import { AdminStatsPage }      from "./pages/AdminStatsPage";
 import { AdminMonitoringPage } from "./pages/AdminMonitoringPage";
 import { AdminSettingsPage }   from "./pages/AdminSettingsPage";
-import { AdminAssistantPage }  from "./pages/AdminAssistantPage";
-import { AdminUsersPage }      from "./pages/AdminUsersPage";
+import { AdminAssistantPage }      from "./pages/AdminAssistantPage";
+import { AdminUsersPage }          from "./pages/AdminUsersPage";
+import { AdminCommandCenterPage }  from "./pages/AdminCommandCenterPage";
 
 export function AdminDashboard() {
   return (
@@ -17,8 +18,9 @@ export function AdminDashboard() {
         <Route path="stats"      element={<AdminStatsPage />}      />
         <Route path="monitoring" element={<AdminMonitoringPage />} />
         <Route path="settings"   element={<AdminSettingsPage />}   />
-        <Route path="assistant"  element={<AdminAssistantPage />}  />
-        <Route path="users"      element={<AdminUsersPage />}      />
+        <Route path="assistant"  element={<AdminAssistantPage />}      />
+        <Route path="users"      element={<AdminUsersPage />}        />
+        <Route path="command"    element={<AdminCommandCenterPage />} />
       </Routes>
     </DashboardLayout>
   );

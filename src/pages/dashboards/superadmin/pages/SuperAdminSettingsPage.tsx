@@ -3,7 +3,7 @@ import {
   Globe, Bell, Shield, Sliders, ToggleRight, ToggleLeft,
   ChevronDown, ChevronUp, Info, Palette, Database,
   Save, Loader2, RefreshCw, Key, Clock, Volume2,
-  CheckCircle2, AlertTriangle, Hash,
+  CheckCircle2, AlertTriangle, Hash, Trash2, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SACard, SASection, SABadge, PulseDot } from "../components/SACard";
@@ -93,6 +93,12 @@ export function SuperAdminSettingsPage() {
 
   // ── Expanded section ──────────────────────────────────────
   const [openSection, setOpenSection] = useState<string | null>(null);
+
+  // ── Danger zone ───────────────────────────────────────────
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteResult, setDeleteResult] = useState<{ orders: number; items: number } | null>(null);
 
   async function loadDbStats() {
     setDbLoading(true);
@@ -184,6 +190,33 @@ export function SuperAdminSettingsPage() {
   function saveSessionTimeout() {
     saveSetting("session_timeout", sessionTimeout);
     notify({ type: "success", title: `✓ مهلة الجلسة: ${sessionTimeout} دقيقة` });
+  }
+
+  async function executeDeleteOperationalData() {
+    setDeleteLoading(true);
+    try {
+      // حذف order_items أولاً (foreign key) ثم orders
+      const { count: itemsCount } = await db
+        .from("order_items").select("id", { count: "exact", head: true });
+      const { count: ordersCount } = await db
+        .from("orders").select("id", { count: "exact", head: true });
+
+      const { error: e1 } = await db.from("order_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (e1) throw e1;
+      const { error: e2 } = await db.from("orders").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (e2) throw e2;
+
+      setDeleteResult({ orders: ordersCount ?? 0, items: itemsCount ?? 0 });
+      notify({ type: "success", title: "✓ تم حذف البيانات التشغيلية", message: `${ordersCount ?? 0} طلب، ${itemsCount ?? 0} عنصر` });
+      setShowDeleteDialog(false);
+      setDeleteConfirmText("");
+      // Refresh DB stats if open
+      if (openSection === "database") loadDbStats();
+    } catch {
+      notify({ type: "error", title: "فشل الحذف — تحقق من الصلاحيات" });
+    } finally {
+      setDeleteLoading(false);
+    }
   }
 
   const categories = [...new Set(flags.map(f => f.category))];

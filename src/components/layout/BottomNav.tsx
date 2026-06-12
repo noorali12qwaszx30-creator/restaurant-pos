@@ -17,6 +17,7 @@ import {
   ClipboardList,
   BotMessageSquare,
   Users,
+  Activity,
 } from "lucide-react";
 import type { UserRole } from "@/types";
 import { cn } from "@/lib/utils";
@@ -60,20 +61,18 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { to: "/dashboard/kitchen/profile", label: "حسابي", icon: User },
   ],
   admin: [
-    { to: "/dashboard/admin",            label: "الرئيسية",   icon: LayoutDashboard  },
-    { to: "/dashboard/admin/orders",     label: "الطلبات",    icon: ShoppingBag      },
-    { to: "/dashboard/admin/stats",      label: "إحصائيات",  icon: BarChart3        },
-    { to: "/dashboard/admin/users",      label: "الموظفون",   icon: Users            },
-    { to: "/dashboard/admin/settings",   label: "إعدادات",    icon: Settings         },
-    { to: "/dashboard/admin/assistant",  label: "المساعد",    icon: BotMessageSquare },
+    { to: "/dashboard/admin",            label: "الرئيسية",  icon: LayoutDashboard  },
+    { to: "/dashboard/admin/orders",     label: "الطلبات",   icon: ShoppingBag      },
+    { to: "/dashboard/admin/command",    label: "القيادة",   icon: Activity         },
+    { to: "/dashboard/admin/users",      label: "الموظفون",  icon: Users            },
+    { to: "/dashboard/admin/settings",   label: "إعدادات",   icon: Settings         },
   ],
   super_admin: [
-    { to: "/dashboard/admin",            label: "الرئيسية",   icon: LayoutDashboard  },
-    { to: "/dashboard/admin/orders",     label: "الطلبات",    icon: ShoppingBag      },
-    { to: "/dashboard/admin/stats",      label: "إحصائيات",  icon: BarChart3        },
-    { to: "/dashboard/admin/users",      label: "الموظفون",   icon: Users            },
-    { to: "/dashboard/admin/settings",   label: "إعدادات",    icon: Settings         },
-    { to: "/dashboard/admin/assistant",  label: "المساعد",    icon: BotMessageSquare },
+    { to: "/dashboard/admin",            label: "الرئيسية",  icon: LayoutDashboard  },
+    { to: "/dashboard/admin/orders",     label: "الطلبات",   icon: ShoppingBag      },
+    { to: "/dashboard/admin/command",    label: "القيادة",   icon: Activity         },
+    { to: "/dashboard/admin/users",      label: "الموظفون",  icon: Users            },
+    { to: "/dashboard/admin/settings",   label: "إعدادات",   icon: Settings         },
   ],
 };
 
