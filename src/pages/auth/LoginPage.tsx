@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { AppLogo } from "@/components/AppLogo";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Building2, Delete, Loader2, ChevronDown, Search } from "lucide-react";
@@ -33,17 +34,40 @@ export function LoginPage() {
 
   // ── جلب المطاعم ──────────────────────────────────────────────
   useEffect(() => {
-    async function fetchRestaurants() {
+    let cancelled = false;
+
+    async function fetchRestaurants(attempt = 1) {
       if (IS_DEV_MODE) {
         setRestaurants([{ id: "00000000-0000-0000-0000-000000000001", name: "المطعم التجريبي", logo: null, phone: null, address: null, is_active: true, created_at: "" }]);
         setLoadingRestaurants(false);
         return;
       }
-      const { data } = await supabase.from("restaurants").select("*").eq("is_active", true).order("name");
-      setRestaurants(data ?? []);
-      setLoadingRestaurants(false);
+      try {
+        const { data, error } = await supabase
+          .from("restaurants")
+          .select("id, name, logo, phone, address, is_active, created_at")
+          .eq("is_active", true)
+          .order("name");
+
+        if (cancelled) return;
+
+        if (error) throw error;
+        setRestaurants(data ?? []);
+      } catch {
+        if (cancelled) return;
+        // أعد المحاولة 3 مرات بفاصل متزايد
+        if (attempt < 3) {
+          setTimeout(() => fetchRestaurants(attempt + 1), attempt * 1500);
+          return;
+        }
+        setRestaurants([]);
+      } finally {
+        if (!cancelled) setLoadingRestaurants(false);
+      }
     }
+
     fetchRestaurants();
+    return () => { cancelled = true; };
   }, []);
 
   // ── تركيز تلقائي ────────────────────────────────────────────
@@ -129,8 +153,8 @@ export function LoginPage() {
 
         {/* ── الشعار ── */}
         <div className="text-center">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center mx-auto mb-3 shadow-elevated">
-            <span className="text-xl font-black text-white">ن</span>
+          <div className="flex justify-center mb-3">
+            <AppLogo size={80} />
           </div>
           <h1 className="text-xl font-bold text-text-primary">النظام للإدارة المتكاملة</h1>
           <p className="text-xs text-text-muted mt-0.5">نظام إدارة المطاعم</p>
