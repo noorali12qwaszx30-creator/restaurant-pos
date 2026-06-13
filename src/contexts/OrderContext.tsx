@@ -103,6 +103,7 @@ interface OrderContextValue {
   markReady: (orderId: string) => Promise<void>;
   assignAndDispatch: (orderId: string, driverId: string, driverName: string) => Promise<void>;
   acceptOrder: (orderId: string) => Promise<void>;
+  rejectOrder: (orderId: string) => Promise<void>;
   markDelivered: (orderId: string) => Promise<void>;
   editOrder: (orderId: string, patch: Partial<Pick<LiveOrder, "customerName"|"customerPhone"|"deliveryAddress"|"notes"|"subtotal"|"deliveryFee"|"tax"|"total"|"items">>) => Promise<void>;
   cancelOrder: (orderId: string, reason: string, cancelledBy?: string) => Promise<void>;
@@ -294,6 +295,15 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const rejectOrder = useCallback(async (orderId: string) => {
+    // السائق يرفض الإسناد → يرجع الطلب للميدان جاهزاً بدون سائق
+    patchLocal(orderId, { status: "ready", driverId: undefined, driverName: undefined });
+    if (!IS_DEV_MODE) {
+      const { rejectAssignment } = await import("@/integrations/supabase/queries");
+      await rejectAssignment(orderId);
+    }
+  }, []);
+
   const markDelivered = useCallback(async (orderId: string) => {
     patchLocal(orderId, { status: "delivered", deliveredAt: new Date() });
     if (!IS_DEV_MODE) {
@@ -354,7 +364,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     <OrderContext.Provider value={{
       orders, isLoading, loadError,
       addOrder, editOrder, markPreparing, markReady,
-      assignAndDispatch, acceptOrder, markDelivered, cancelOrder, reportIssue,
+      assignAndDispatch, acceptOrder, rejectOrder, markDelivered, cancelOrder, reportIssue,
       refetch: () => loadOrders(true),
     }}>
       {children}

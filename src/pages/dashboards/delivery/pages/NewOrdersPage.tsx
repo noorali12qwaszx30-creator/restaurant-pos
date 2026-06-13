@@ -1,8 +1,74 @@
 import { useState, useMemo } from "react";
-import { MapPin, Clock, FileText, Phone, MessageCircle, Bike, BellRing, CheckCircle2, Loader2 } from "lucide-react";
+import { MapPin, Clock, FileText, Phone, MessageCircle, Bike, BellRing, CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { useOrders, type LiveOrder } from "@/contexts/OrderContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { EmptyState } from "@/components/dashboard/EmptyState";
+
+// ── لوحة التأكيد المنبثقة ─────────────────────────────────────
+function ConfirmSheet({ mode, order, loading, onConfirm, onCancel }: {
+  mode: "accept" | "reject";
+  order: LiveOrder;
+  loading: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const isAccept = mode === "accept";
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end justify-center" dir="rtl">
+      {/* الخلفية المعتمة */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={loading ? undefined : onCancel} />
+
+      {/* اللوحة */}
+      <div className="relative w-full max-w-md bg-surface rounded-t-3xl p-5 pb-8 slide-up shadow-dialog">
+        <div className="w-10 h-1 rounded-full bg-border mx-auto mb-4" />
+
+        <div className="flex flex-col items-center text-center gap-2 mb-5">
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isAccept ? "bg-primary/10" : "bg-status-error/10"}`}>
+            {isAccept
+              ? <CheckCircle2 className="w-7 h-7 text-primary" />
+              : <XCircle className="w-7 h-7 text-status-error" />}
+          </div>
+          <p className="text-lg font-bold text-text-primary">
+            {isAccept ? "قبول الطلب والانطلاق؟" : "رفض هذا الطلب؟"}
+          </p>
+          <p className="text-sm text-text-muted leading-relaxed">
+            {isAccept
+              ? "سينتقل الطلب إلى قائمة طلباتك وتبدأ رحلة التوصيل"
+              : "سيرجع الطلب إلى الميدان ليُسند لسائق آخر"}
+          </p>
+          <div className="flex items-center gap-2 bg-surface-elevated border border-border rounded-xl px-3 py-2 mt-1">
+            <span className="text-sm font-black text-primary num">#{order.orderNumber ?? order.id.slice(0, 4)}</span>
+            <span className="text-xs text-text-muted">·</span>
+            <span className="text-sm font-bold text-text-primary num">{order.total.toFixed(1)} د.ع</span>
+            {order.zone && <>
+              <span className="text-xs text-text-muted">·</span>
+              <span className="text-xs text-text-secondary">{order.zone}</span>
+            </>}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2.5">
+          <button
+            onClick={onCancel}
+            disabled={loading}
+            className="h-12 rounded-2xl border border-border bg-surface-elevated text-text-secondary text-sm font-bold disabled:opacity-50 active:scale-[0.97] transition-all"
+          >
+            تراجع
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className={`h-12 rounded-2xl text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.97] transition-all shadow-elevated ${isAccept ? "bg-primary" : "bg-status-error"}`}
+          >
+            {loading
+              ? <Loader2 className="w-5 h-5 animate-spin" />
+              : isAccept ? <><CheckCircle2 className="w-4 h-4" /> تأكيد القبول</> : <><XCircle className="w-4 h-4" /> تأكيد الرفض</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function waitedLabel(d: Date) {
   const m = Math.floor((Date.now() - d.getTime()) / 60000);
@@ -25,13 +91,24 @@ function ContactButtons({ phone }: { phone?: string }) {
   );
 }
 
-function NewOrderCard({ order, onAccept }: { order: LiveOrder; onAccept: () => Promise<void> }) {
+function NewOrderCard({ order, onAccept, onReject }: {
+  order: LiveOrder;
+  onAccept: () => Promise<void>;
+  onReject: () => Promise<void>;
+}) {
+  const [confirm, setConfirm] = useState<"accept" | "reject" | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleAccept() {
+  async function handleConfirm() {
+    if (!confirm) return;
     setLoading(true);
-    await onAccept();
-    setLoading(false);
+    try {
+      if (confirm === "accept") await onAccept();
+      else await onReject();
+    } finally {
+      setLoading(false);
+      setConfirm(null);
+    }
   }
 
   return (
@@ -121,24 +198,39 @@ function NewOrderCard({ order, onAccept }: { order: LiveOrder; onAccept: () => P
         {/* Contact */}
         <ContactButtons phone={order.customerPhone} />
 
-        {/* ── زر القبول ── */}
-        <button
-          onClick={handleAccept}
-          disabled={loading}
-          className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-bold text-base flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.98] transition-all shadow-elevated"
-        >
-          {loading
-            ? <Loader2 className="w-5 h-5 animate-spin" />
-            : <><CheckCircle2 className="w-5 h-5" /> قبول الطلب والانطلاق</>
-          }
-        </button>
+        {/* ── زرا القبول والرفض ── */}
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            onClick={() => setConfirm("reject")}
+            className="h-12 rounded-2xl border-2 border-status-error/30 bg-status-error/5 text-status-error font-bold text-sm flex items-center justify-center gap-1.5 active:scale-[0.97] transition-all"
+          >
+            <XCircle className="w-4 h-4" /> رفض
+          </button>
+          <button
+            onClick={() => setConfirm("accept")}
+            className="col-span-2 h-12 rounded-2xl bg-primary text-primary-foreground font-bold text-base flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-elevated"
+          >
+            <CheckCircle2 className="w-5 h-5" /> قبول الطلب
+          </button>
+        </div>
       </div>
+
+      {/* لوحة التأكيد */}
+      {confirm && (
+        <ConfirmSheet
+          mode={confirm}
+          order={order}
+          loading={loading}
+          onConfirm={handleConfirm}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
     </div>
   );
 }
 
 export function NewOrdersPage() {
-  const { orders, acceptOrder } = useOrders();
+  const { orders, acceptOrder, rejectOrder } = useOrders();
   const { profile } = useAuth();
   const driverId = profile?.uid ?? "mock-delivery-001";
 
@@ -174,6 +266,7 @@ export function NewOrdersPage() {
               key={o.id}
               order={o}
               onAccept={() => acceptOrder(o.id)}
+              onReject={() => rejectOrder(o.id)}
             />
           ))}
         </>

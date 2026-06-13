@@ -175,11 +175,20 @@ export async function updateOrderStatus(
   if (error) throw error;
 }
 
-/** Assign driver + set delivering */
+/** Assign driver — ينتظر قبول السائق (حالة assigned) */
 export async function assignDriver(orderId: string, driverId: string): Promise<void> {
   const { error } = await (supabase as unknown as AnyRecord)
     .from("orders")
-    .update({ driver_id: driverId, status: "delivering" })
+    .update({ driver_id: driverId, status: "assigned" })
+    .eq("id", orderId);
+  if (error) throw error;
+}
+
+/** Driver rejects assignment — يرجع الطلب للميدان بدون سائق */
+export async function rejectAssignment(orderId: string): Promise<void> {
+  const { error } = await (supabase as unknown as AnyRecord)
+    .from("orders")
+    .update({ driver_id: null, status: "ready" })
     .eq("id", orderId);
   if (error) throw error;
 }
