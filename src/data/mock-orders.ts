@@ -31,6 +31,18 @@ export const MOCK_ORDERS: Order[] = [
     createdAt: ago(35), updatedAt: ago(2), estimatedTime: 0,
   },
   {
+    id: "ORD-T09",
+    type: "takeaway",
+    status: "cancelled",
+    customerName: "خالد العتيبي",
+    customerPhone: "0539876543",
+    items: [
+      { menuItemId: "m25", name: "شاورما لحم", quantity: 2, unitPrice: 30 },
+    ],
+    subtotal: 60, tax: 9, total: 69,
+    createdAt: ago(60), updatedAt: ago(40), estimatedTime: 0,
+  },
+  {
     id: "ORD-003",
     type: "delivery",
     status: "delivering",

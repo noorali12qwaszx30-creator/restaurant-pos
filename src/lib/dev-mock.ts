@@ -66,6 +66,21 @@ const MOCK_USERS: Record<string, { password: string; profile: UserProfile }> = {
       updatedAt: new Date(),
     },
   },
+  takeaway1: {
+    password: "Take@123",
+    profile: {
+      uid: "mock-takeaway-001",
+      username: "takeaway1",
+      email: "takeaway1@restaurant.local",
+      displayName: "موظف السفري",
+      roles: ["takeaway"],
+      isActive: true,
+      restaurantId: MOCK_RESTAURANT_ID,
+      isSuperAdmin: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  },
   kitchen1: {
     password: "Kitchen@123",
     profile: {
@@ -123,6 +138,7 @@ const DEMO_CODES: Record<string, string> = {
   "1000000003": "kitchen1",
   "1000000004": "field1",
   "1000000005": "delivery1",
+  "1000000006": "takeaway1",
 };
 
 export function mockSignIn(username: string, password: string): UserProfile {

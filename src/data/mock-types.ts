@@ -10,7 +10,7 @@ export type OrderStatus =
 export type OrderType = "delivery" | "takeaway" | "pickup";
 export type TableStatus = "available" | "occupied" | "reserved" | "cleaning";
 export type PaymentMethod = "cash" | "card" | "split";
-export type UserRole = "cashier" | "field" | "delivery" | "kitchen" | "admin" | "super_admin";
+export type UserRole = "cashier" | "field" | "delivery" | "takeaway" | "kitchen" | "admin" | "super_admin";
 
 export interface MenuItem {
   id: string;

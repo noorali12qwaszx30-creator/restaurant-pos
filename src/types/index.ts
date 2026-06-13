@@ -2,6 +2,7 @@ export type UserRole =
   | "cashier"
   | "field"
   | "delivery"
+  | "takeaway"
   | "kitchen"
   | "admin"
   | "super_admin";
@@ -49,6 +50,13 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     iconName: "Bike",
     color: "hsl(142 71% 45%)",
   },
+  takeaway: {
+    id: "takeaway",
+    label: "تيك أواي",
+    description: "إدارة طلبات السفري",
+    iconName: "ShoppingBag",
+    color: "hsl(38 92% 50%)",
+  },
   kitchen: {
     id: "kitchen",
     label: "مطبخ",
@@ -76,6 +84,7 @@ export const ROLE_ROUTES: Record<UserRole, string> = {
   cashier:     "/dashboard/cashier",
   field:       "/dashboard/field",
   delivery:    "/dashboard/delivery",
+  takeaway:    "/dashboard/takeaway",
   kitchen:     "/dashboard/kitchen",
   admin:       "/dashboard/admin",
   super_admin: "/superadmin",

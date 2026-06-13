@@ -35,6 +35,14 @@ export function canTransition(
         (current === "delivering" && target === "delivered")
       );
 
+    // السفري: ready→delivered (تسليم للزبون) + الإلغاء قبل التسليم
+    // (لا يملك assigned/delivering الخاصة بالسائق، ولا pending→preparing/preparing→ready)
+    case "takeaway":
+      return (
+        (current === "ready" && target === "delivered") ||
+        (target === "cancelled" && current !== "delivered")
+      );
+
     // الكاشير: الإلغاء فقط قبل التسليم
     case "cashier":
       return target === "cancelled" && current !== "delivered";

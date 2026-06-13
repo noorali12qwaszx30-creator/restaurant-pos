@@ -12,6 +12,7 @@ const ROLE_BADGE_VARIANTS: Record<UserRole, "default" | "success" | "warning" | 
   cashier:     "default",
   field:       "info",
   delivery:    "secondary",
+  takeaway:    "success",
   kitchen:     "secondary",
   super_admin: "warning",
 };
@@ -92,7 +93,7 @@ export function UsersTab() {
                 <div className="flex flex-col gap-2">
                   <p className="text-sm font-medium text-text-secondary">الأدوار المسندة</p>
                   <div className="flex flex-wrap gap-2">
-                    {(["cashier","field","delivery","kitchen","admin"] as UserRole[]).map((role) => {
+                    {(["cashier","field","delivery","takeaway","kitchen","admin"] as UserRole[]).map((role) => {
                       const active = editUser.roles.includes(role);
                       return (
                         <button key={role} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-all ${active ? "bg-primary text-white border-primary" : "bg-surface-elevated text-text-muted border-border"}`}>
@@ -144,7 +145,7 @@ export function UsersTab() {
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-medium text-text-secondary">الدور</label>
                 <div className="flex flex-wrap gap-2">
-                  {(["cashier","field","delivery","kitchen","admin"] as UserRole[]).map((role) => (
+                  {(["cashier","field","delivery","takeaway","kitchen","admin"] as UserRole[]).map((role) => (
                     <button key={role} className="px-3 py-1.5 rounded-full text-xs border border-border text-text-muted bg-surface-elevated hover:border-primary hover:text-primary transition-all">
                       {ROLE_LABELS[role]}
                     </button>

@@ -22,6 +22,15 @@ describe("canTransition — مصفوفة دورة حياة الطلب", () => {
     expect(canTransition("ready", "assigned", "delivery")).toBe(false);
   });
 
+  it("takeaway: ready→delivered وإلغاء فقط؛ لا انتقالات المطبخ/الميدان/السائق", () => {
+    expect(canTransition("ready", "delivered", "takeaway")).toBe(true);
+    expect(canTransition("pending", "cancelled", "takeaway")).toBe(true);
+    expect(canTransition("pending", "preparing", "takeaway")).toBe(false);
+    expect(canTransition("preparing", "ready", "takeaway")).toBe(false);
+    expect(canTransition("assigned", "delivering", "takeaway")).toBe(false);
+    expect(canTransition("ready", "assigned", "takeaway")).toBe(false);
+  });
+
   it("cashier: إلغاء قبل التسليم فقط", () => {
     expect(canTransition("pending", "cancelled", "cashier")).toBe(true);
     expect(canTransition("delivering", "cancelled", "cashier")).toBe(true);
