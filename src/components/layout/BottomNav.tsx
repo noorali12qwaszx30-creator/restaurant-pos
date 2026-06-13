@@ -1,7 +1,6 @@
 import { NavLink } from "react-router-dom";
 import {
   ShoppingBag,
-  BarChart3,
   User,
   Bike,
   Package,
@@ -15,7 +14,6 @@ import {
   History,
   AlertCircle,
   ClipboardList,
-  BotMessageSquare,
   Users,
   Activity,
   Wallet,

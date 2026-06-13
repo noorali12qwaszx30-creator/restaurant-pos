@@ -3,7 +3,7 @@ import {
   Globe, Bell, Shield, Sliders, ToggleRight, ToggleLeft,
   ChevronDown, ChevronUp, Info, Palette, Database,
   Save, Loader2, RefreshCw, Key, Clock, Volume2,
-  CheckCircle2, AlertTriangle, Hash, Trash2, X,
+  CheckCircle2, AlertTriangle, Hash,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SACard, SASection, SABadge, PulseDot } from "../components/SACard";
@@ -94,11 +94,12 @@ export function SuperAdminSettingsPage() {
   // ── Expanded section ──────────────────────────────────────
   const [openSection, setOpenSection] = useState<string | null>(null);
 
-  // ── Danger zone ───────────────────────────────────────────
+  // ── Danger zone state ─────────────────────────────────────
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteResult, setDeleteResult] = useState<{ orders: number; items: number } | null>(null);
+  void showDeleteDialog; void deleteConfirmText; void deleteLoading; void deleteResult; void executeDeleteOperationalData;
 
   async function loadDbStats() {
     setDbLoading(true);
