@@ -133,9 +133,14 @@ export function mockSignIn(username: string, password: string): UserProfile {
   return entry.profile;
 }
 
+/** ربط الكود الرقمي باسم المستخدم التجريبي (دالة نقية قابلة للاختبار) */
+export function resolveDemoCode(code: string): string | null {
+  return DEMO_CODES[code.trim()] ?? null;
+}
+
 /** دخول تجريبي بالكود الرقمي — نفس واجهة الإنتاج */
 export function mockSignInWithCode(code: string): UserProfile {
-  const username = DEMO_CODES[code.trim()];
+  const username = resolveDemoCode(code);
   if (!username) throw new Error("auth/invalid-code");
   const entry = MOCK_USERS[username];
   if (!entry) throw new Error("auth/user-not-found");
