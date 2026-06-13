@@ -41,7 +41,6 @@ export function useOrdersRealtime(opts: Options = {}): Result {
     } finally {
       setIsLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId, opts.status, opts.type]);
 
   useEffect(() => {

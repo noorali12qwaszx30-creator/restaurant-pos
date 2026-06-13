@@ -43,7 +43,7 @@ function DispatchedRow({ order }: { order: LiveOrder }) {
 function playNewOrderSound() {
   try {
     const ctx = new (window.AudioContext || (window as never as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    function ding(freq: number, startAt: number, duration: number) {
+    const ding = (freq: number, startAt: number, duration: number) => {
       const osc  = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
@@ -55,7 +55,7 @@ function playNewOrderSound() {
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startAt + duration);
       osc.start(ctx.currentTime + startAt);
       osc.stop(ctx.currentTime + startAt + duration);
-    }
+    };
     ding(880, 0,    0.5);  // first ding
     ding(1100, 0.3, 0.5);  // second ding (higher)
     setTimeout(() => ctx.close(), 1200);
