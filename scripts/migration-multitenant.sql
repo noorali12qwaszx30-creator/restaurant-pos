@@ -99,6 +99,11 @@ CREATE POLICY "restaurants_select" ON restaurants
     OR id = current_restaurant_id()
   );
 
+-- شاشة تسجيل الدخول تحتاج قراءة المطاعم النشطة قبل المصادقة
+DROP POLICY IF EXISTS "restaurants_public_read" ON restaurants;
+CREATE POLICY "restaurants_public_read" ON restaurants
+  FOR SELECT USING (is_active = true);
+
 DROP POLICY IF EXISTS "restaurants_all_super" ON restaurants;
 CREATE POLICY "restaurants_all_super" ON restaurants
   FOR ALL USING (is_super_admin());
