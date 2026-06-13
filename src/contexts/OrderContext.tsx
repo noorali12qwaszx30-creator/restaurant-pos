@@ -32,6 +32,7 @@ export interface LiveOrder {
   customerPhone?: string;
   deliveryAddress?: string;
   zone?: string;
+  deliveryAreaId?: string;
   notes?: string;
   cashierId?: string;
   driverId?: string;
@@ -215,31 +216,23 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       setOrders(prev => [newOrder, ...prev]);
       return id;
     }
-    const { createOrder, getOrder } = await import("@/integrations/supabase/queries");
-    const created = await createOrder(
-      {
-        type: order.type as never,
-        source: (order.source ?? "local") as never,
-        payment_method: (order.paymentMethod ?? "cash") as never,
-        customer_name: order.customerName,
-        customer_phone: order.customerPhone,
-        delivery_address: order.deliveryAddress,
-        notes: order.notes,
-        subtotal: order.subtotal,
-        delivery_fee: order.deliveryFee,
-        tax: order.tax,
-        total: order.total,
-        cashier_id: order.cashierId ?? "",
-        restaurant_id: restaurantId,
-      },
-      order.items.map(i => ({
+    // إنشاء ذرّي عبر RPC — الأسعار ورسوم التوصيل من القاعدة
+    const { createOrderWithItems, getOrder } = await import("@/integrations/supabase/queries");
+    const created = await createOrderWithItems({
+      type: order.type,
+      source: (order.source ?? "local") as never,
+      payment_method: (order.paymentMethod ?? "cash") as never,
+      items: order.items.map(i => ({
         menu_item_id: i.menuItemId,
-        name: i.name,
-        unit_price: i.unitPrice,
         quantity: i.quantity,
         notes: i.notes,
-      }))
-    );
+      })),
+      customer_name: order.customerName,
+      customer_phone: order.customerPhone,
+      delivery_address: order.deliveryAddress,
+      delivery_area_id: order.deliveryAreaId,
+      notes: order.notes,
+    });
 
     const nowOpt = new Date();
     const optimistic: LiveOrder = { ...order, id: created.id, status: "pending", createdAt: nowOpt, updatedAt: nowOpt };
@@ -262,19 +255,20 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId]);
 
+  // كل انتقالات الحالة تمرّ عبر RPC الآمن change_order_status في الإنتاج
   const markPreparing = useCallback(async (orderId: string) => {
     patchLocal(orderId, { status: "preparing", preparingAt: new Date() });
     if (!IS_DEV_MODE) {
-      const { updateOrderStatus } = await import("@/integrations/supabase/queries");
-      await updateOrderStatus(orderId, "preparing");
+      const { changeOrderStatus } = await import("@/integrations/supabase/queries");
+      await changeOrderStatus(orderId, "preparing");
     }
   }, []);
 
   const markReady = useCallback(async (orderId: string) => {
     patchLocal(orderId, { status: "ready", readyAt: new Date() });
     if (!IS_DEV_MODE) {
-      const { updateOrderStatus } = await import("@/integrations/supabase/queries");
-      await updateOrderStatus(orderId, "ready");
+      const { changeOrderStatus } = await import("@/integrations/supabase/queries");
+      await changeOrderStatus(orderId, "ready");
     }
   }, []);
 
@@ -284,8 +278,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     // يعيّن السائق لكن ينتظر قبوله — حالة "assigned" وليس "delivering"
     patchLocal(orderId, { status: "assigned", driverId, driverName });
     if (!IS_DEV_MODE) {
-      const { assignDriver } = await import("@/integrations/supabase/queries");
-      await assignDriver(orderId, driverId);
+      const { changeOrderStatus } = await import("@/integrations/supabase/queries");
+      await changeOrderStatus(orderId, "assigned", { driver_id: driverId });
     }
   }, []);
 
@@ -293,8 +287,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     // السائق يقبل الطلب → ينتقل لـ "delivering"
     patchLocal(orderId, { status: "delivering", deliveringAt: new Date() });
     if (!IS_DEV_MODE) {
-      const { updateOrderStatus } = await import("@/integrations/supabase/queries");
-      await updateOrderStatus(orderId, "delivering");
+      const { changeOrderStatus } = await import("@/integrations/supabase/queries");
+      await changeOrderStatus(orderId, "delivering");
     }
   }, []);
 
@@ -302,16 +296,16 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     // السائق يرفض الإسناد → يرجع الطلب للميدان جاهزاً بدون سائق
     patchLocal(orderId, { status: "ready", driverId: undefined, driverName: undefined });
     if (!IS_DEV_MODE) {
-      const { rejectAssignment } = await import("@/integrations/supabase/queries");
-      await rejectAssignment(orderId);
+      const { changeOrderStatus } = await import("@/integrations/supabase/queries");
+      await changeOrderStatus(orderId, "ready");
     }
   }, []);
 
   const markDelivered = useCallback(async (orderId: string) => {
     patchLocal(orderId, { status: "delivered", deliveredAt: new Date() });
     if (!IS_DEV_MODE) {
-      const { updateOrderStatus } = await import("@/integrations/supabase/queries");
-      await updateOrderStatus(orderId, "delivered");
+      const { changeOrderStatus } = await import("@/integrations/supabase/queries");
+      await changeOrderStatus(orderId, "delivered");
     }
   }, []);
 
@@ -348,8 +342,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   ) => {
     patchLocal(orderId, { status: "cancelled", cancellationReason: reason, cancelledAt: new Date() });
     if (!IS_DEV_MODE) {
-      const { updateOrderStatus } = await import("@/integrations/supabase/queries");
-      await updateOrderStatus(orderId, "cancelled", { cancellation_note: reason });
+      const { changeOrderStatus } = await import("@/integrations/supabase/queries");
+      await changeOrderStatus(orderId, "cancelled", { note: reason });
     }
   }, []);
 

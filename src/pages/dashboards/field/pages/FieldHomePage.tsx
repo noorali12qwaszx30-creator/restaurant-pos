@@ -5,19 +5,6 @@ import { MOCK_DRIVERS } from "@/data/mock-drivers";
 import { OrderCard } from "@/components/dashboard/OrderCard";
 import { cn } from "@/lib/utils";
 
-// ── Move to Ready button ──────────────────────────────────────
-function MoveToReadyButton({ onConfirm }: { onConfirm: () => void }) {
-  const [loading, setLoading] = useState(false);
-  async function handle() { setLoading(true); await onConfirm(); setLoading(false); }
-  return (
-    <button onClick={handle} disabled={loading}
-      className="w-full h-11 rounded-xl bg-status-success text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.98] transition-all"
-    >
-      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle2 className="w-4 h-4" /> نقل للجاهز</>}
-    </button>
-  );
-}
-
 // ── Preparing Card ────────────────────────────────────────────
 function PreparingCard({ order, onMarkReady }: { order: LiveOrder; onMarkReady: () => void }) {
   const [loading, setLoading] = useState(false);
@@ -180,12 +167,12 @@ export function FieldHomePage() {
         </div>
       </div>
 
-      {/* ── Pending ── */}
+      {/* ── Pending — بانتظار المطبخ (عرض فقط، المطبخ يبدأ التحضير) ── */}
       {pendingOrders.length > 0 && (
         <section className="px-4 pt-4">
           <div className="flex items-center gap-2 mb-3">
             <Clock className="w-4 h-4 text-status-warning" />
-            <h2 className="text-sm font-bold text-text-primary">انتظار التأكيد</h2>
+            <h2 className="text-sm font-bold text-text-primary">بانتظار المطبخ</h2>
             <span className="text-xs font-bold text-status-warning bg-status-warning/10 rounded-full px-2 py-0.5 border border-status-warning/20">
               {pendingOrders.length}
             </span>
@@ -193,7 +180,11 @@ export function FieldHomePage() {
           <div className="flex flex-col gap-3 mb-6">
             {pendingOrders.map(o => (
               <OrderCard key={o.id} order={o}
-                actions={<MoveToReadyButton onConfirm={() => markReady(o.id)} />}
+                actions={
+                  <div className="w-full h-10 rounded-xl bg-surface-elevated border border-border text-text-muted text-xs font-semibold flex items-center justify-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5" /> بانتظار بدء المطبخ
+                  </div>
+                }
               />
             ))}
           </div>

@@ -95,12 +95,19 @@ function StatsBar({ newCount, preparingCount, readyCount, lateCount }: {
 interface KitchenCardProps {
   order: LiveOrder;
   alarmLevel: AlarmLevel;
+  onStartPreparing: (id: string) => void;
 }
 
-function KitchenOrderCard({ order, alarmLevel }: KitchenCardProps) {
+function KitchenOrderCard({ order, alarmLevel, onStartPreparing }: KitchenCardProps) {
+  const [starting, setStarting] = useState(false);
   const age         = ageMin(order.createdAt);
   const isPreparing = order.status === "preparing";
   const isNew       = order.status === "pending";
+
+  async function handleStart() {
+    setStarting(true);
+    try { await onStartPreparing(order.id); } finally { setStarting(false); }
+  }
 
   const borderCls =
     alarmLevel === 3 ? "border-status-error ring-2 ring-status-error/30" :
@@ -206,7 +213,18 @@ function KitchenOrderCard({ order, alarmLevel }: KitchenCardProps) {
         <p className="text-[10px] text-text-muted text-center pb-1">+{order.items.length - 5} أصناف أخرى</p>
       )}
 
-      {/* Kitchen is display-only — no action buttons */}
+      {/* نقطة تحكم صغيرة: بدء التحضير (pending → preparing) فقط — لا تكسر تخطيط الشاشة */}
+      {isNew && (
+        <button
+          onClick={handleStart}
+          disabled={starting}
+          className="mx-2.5 mb-2.5 mt-auto h-9 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-60 active:scale-[0.97] transition-all"
+        >
+          {starting
+            ? <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            : <><ChefHat className="w-3.5 h-3.5" /> بدء التحضير</>}
+        </button>
+      )}
     </div>
   );
 }
@@ -214,7 +232,7 @@ function KitchenOrderCard({ order, alarmLevel }: KitchenCardProps) {
 /* ── Main KitchenDashboard ───────────────────────────────────── */
 export function KitchenDashboard() {
   const [tick, setTick] = useState(0);
-  const { orders } = useOrders();
+  const { orders, markPreparing } = useOrders();
   const alreadyAlarmed = useRef<Set<string>>(new Set());
 
   /* timer tick every second for live timer display */
@@ -331,6 +349,7 @@ export function KitchenDashboard() {
                 key={o.id}
                 order={o}
                 alarmLevel={getOrderLevel(o.createdAt)}
+                onStartPreparing={markPreparing}
               />
             ))}
           </div>

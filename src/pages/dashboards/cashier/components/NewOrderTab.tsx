@@ -159,6 +159,7 @@ export function NewOrderTab() {
         customerPhone: customer.phone || undefined,
         deliveryAddress: customer.address || undefined,
         zone: customer.zoneId || undefined,
+        deliveryAreaId: customer.zoneId || undefined,
         notes: undefined,
         subtotal,
         deliveryFee,

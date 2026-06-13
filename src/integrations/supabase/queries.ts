@@ -75,46 +75,54 @@ export async function getOrder(id: string): Promise<Order | null> {
   return data as Order;
 }
 
-/** Create a new order */
-export async function createOrder(
-  order: {
-    type: OrderType;
-    source: OrderSource;
-    payment_method: PaymentMethod;
-    customer_name?: string;
-    customer_phone?: string;
-    delivery_address?: string;
-    delivery_area_id?: string;
-    notes?: string;
-    subtotal: number;
-    delivery_fee: number;
-    tax: number;
-    total: number;
-    cashier_id: string;
-    restaurant_id: string | null;
-  },
-  items: Array<{
-    menu_item_id: string;
-    name: string;
-    unit_price: number;
-    quantity: number;
-    notes?: string;
-  }>
+/**
+ * إنشاء الطلب ذرّياً عبر RPC — يحسب الأسعار ورسوم التوصيل من القاعدة.
+ * المصدر الموثوق للإنشاء في الإنتاج (لا يثق بمبالغ المتصفح).
+ */
+export async function createOrderWithItems(params: {
+  type: OrderType;
+  source: OrderSource;
+  payment_method: PaymentMethod;
+  items: Array<{ menu_item_id: string; quantity: number; notes?: string }>;
+  customer_name?: string;
+  customer_phone?: string;
+  delivery_address?: string;
+  delivery_area_id?: string;
+  notes?: string;
+}): Promise<Order> {
+  const { data, error } = await (supabase as unknown as AnyRecord).rpc("create_order_with_items", {
+    p_type:             params.type,
+    p_source:           params.source,
+    p_payment_method:   params.payment_method,
+    p_items:            params.items,
+    p_customer_name:    params.customer_name ?? null,
+    p_customer_phone:   params.customer_phone ?? null,
+    p_delivery_address: params.delivery_address ?? null,
+    p_delivery_area_id: params.delivery_area_id ?? null,
+    p_notes:            params.notes ?? null,
+  });
+  if (error) throw error;
+  return data as Order;
+}
+
+/**
+ * تغيير حالة الطلب عبر RPC الآمن — يفرض الدور والمطعم والانتقال المسموح،
+ * ويسجّل في activity_logs. المسار الموثوق لكل انتقالات الحالة في الإنتاج.
+ */
+export async function changeOrderStatus(
+  orderId: string,
+  newStatus: OrderStatus,
+  extra?: { driver_id?: string | null; reason_id?: string | null; note?: string | null }
 ): Promise<Order> {
-  const { data: newOrder, error: orderErr } = await (supabase as unknown as AnyRecord)
-    .from("orders")
-    .insert({ ...order, status: "pending" })
-    .select()
-    .single();
-  if (orderErr) throw orderErr;
-
-  const itemRows = items.map((i) => ({ ...i, order_id: (newOrder as AnyRecord).id }));
-  const { error: itemsErr } = await (supabase as unknown as AnyRecord)
-    .from("order_items")
-    .insert(itemRows);
-  if (itemsErr) throw itemsErr;
-
-  return newOrder as Order;
+  const { data, error } = await (supabase as unknown as AnyRecord).rpc("change_order_status", {
+    p_order_id:   orderId,
+    p_new_status: newStatus,
+    p_driver_id:  extra?.driver_id ?? null,
+    p_reason_id:  extra?.reason_id ?? null,
+    p_note:       extra?.note ?? null,
+  });
+  if (error) throw error;
+  return data as Order;
 }
 
 /** Edit order — update customer info + replace items (cashier only, pre-delivering) */
@@ -157,41 +165,8 @@ export async function updateOrder(
   if (insErr) throw insErr;
 }
 
-/** Update order status */
-export async function updateOrderStatus(
-  id: string,
-  status: OrderStatus,
-  extra?: {
-    driver_id?: string;
-    cancellation_reason_id?: string;
-    cancellation_note?: string;
-    cancelled_by?: string;
-  }
-): Promise<void> {
-  const { error } = await (supabase as unknown as AnyRecord)
-    .from("orders")
-    .update({ status, ...extra })
-    .eq("id", id);
-  if (error) throw error;
-}
-
-/** Assign driver — ينتظر قبول السائق (حالة assigned) */
-export async function assignDriver(orderId: string, driverId: string): Promise<void> {
-  const { error } = await (supabase as unknown as AnyRecord)
-    .from("orders")
-    .update({ driver_id: driverId, status: "assigned" })
-    .eq("id", orderId);
-  if (error) throw error;
-}
-
-/** Driver rejects assignment — يرجع الطلب للميدان بدون سائق */
-export async function rejectAssignment(orderId: string): Promise<void> {
-  const { error } = await (supabase as unknown as AnyRecord)
-    .from("orders")
-    .update({ driver_id: null, status: "ready" })
-    .eq("id", orderId);
-  if (error) throw error;
-}
+// انتقالات الحالة وتعيين/رفض السائق تتم الآن حصراً عبر RPC change_order_status
+// (راجع changeOrderStatus أعلاه) لفرض الدور والمطعم والانتقال المسموح.
 
 /** Report issue on order */
 export async function reportIssue(
