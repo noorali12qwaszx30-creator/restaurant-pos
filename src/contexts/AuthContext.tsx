@@ -43,9 +43,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // ── Dev mode: restore session from sessionStorage ──
     if (IS_DEV_MODE) {
       const profile = getMockSession();
+      const savedRole = localStorage.getItem("activeRole") as UserRole | null;
+      const activeRole = savedRole && profile?.roles.includes(savedRole)
+        ? savedRole
+        : (profile?.roles[0] ?? null);
       setState({
         profile,
-        activeRole: profile?.roles[0] ?? null,
+        activeRole,
         isLoading: false,
         isAuthenticated: !!profile,
         configError: null,
@@ -56,17 +60,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // ── Production: Supabase Auth observer ──
     let unsubscribe: (() => void) | undefined;
 
-    // Safety timeout — if auth doesn't resolve in 6s, stop loading
+    // Safety timeout — if auth doesn't resolve in 8s, stop loading
     const timeout = setTimeout(() => {
       setState(prev => prev.isLoading ? { ...prev, isLoading: false } : prev);
-    }, 6000);
+    }, 8000);
 
     try {
       unsubscribe = onAuthStateChanged((profile) => {
         clearTimeout(timeout);
+        const savedRole = localStorage.getItem("activeRole") as UserRole | null;
+        const activeRole = savedRole && profile?.roles.includes(savedRole)
+          ? savedRole
+          : (profile?.roles[0] ?? null);
         setState({
           profile,
-          activeRole: profile?.roles[0] ?? null,
+          activeRole,
           isLoading: false,
           isAuthenticated: !!profile,
           configError: null,
@@ -82,9 +90,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const notifyLogin = (profile: UserProfile, role?: UserRole) => {
+    const activeRole = role ?? profile.roles[0] ?? null;
+    if (activeRole) localStorage.setItem("activeRole", activeRole);
     setState({
       profile,
-      activeRole: role ?? profile.roles[0] ?? null,
+      activeRole,
       isLoading: false,
       isAuthenticated: true,
       configError: null,
@@ -92,10 +102,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const setActiveRole = (role: UserRole) => {
+    localStorage.setItem("activeRole", role);
     setState((prev) => ({ ...prev, activeRole: role }));
   };
 
   const logout = async () => {
+    localStorage.removeItem("activeRole");
     if (IS_DEV_MODE) {
       mockSignOut();
     } else {
