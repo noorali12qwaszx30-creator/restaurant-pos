@@ -71,16 +71,6 @@ export const MOCK_STAFF: StaffUser[] = [
     lastLogin: new Date(Date.now() - 900000),
   },
   {
-    id: "mock-takeaway-001",
-    username: "takeaway1",
-    displayName: "تيك أواي 1",
-    roles: ["takeaway"],
-    isActive: true,
-    phone: "0500000005",
-    joinDate: new Date("2023-02-20"),
-    lastLogin: new Date(Date.now() - 600000),
-  },
-  {
     id: "mock-kitchen-001",
     username: "kitchen1",
     displayName: "طاهي المطبخ",
@@ -104,7 +94,7 @@ export const MOCK_STAFF: StaffUser[] = [
     id: "mock-super-001",
     username: "super",
     displayName: "متعدد الأدوار",
-    roles: ["cashier", "takeaway", "admin"],
+    roles: ["cashier", "admin"],
     isActive: true,
     phone: "0500000000",
     joinDate: new Date("2022-01-01"),
@@ -117,6 +107,5 @@ export const ROLE_LABELS: Record<string, string> = {
   cashier: "كاشير",
   field: "ميدان",
   delivery: "توصيل",
-  takeaway: "تيك أواي",
   kitchen: "مطبخ",
 };

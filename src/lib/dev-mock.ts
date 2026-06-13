@@ -66,21 +66,6 @@ const MOCK_USERS: Record<string, { password: string; profile: UserProfile }> = {
       updatedAt: new Date(),
     },
   },
-  takeaway1: {
-    password: "Take@123",
-    profile: {
-      uid: "mock-takeaway-001",
-      username: "takeaway1",
-      email: "takeaway1@restaurant.local",
-      displayName: "تيك أواي 1",
-      roles: ["takeaway"],
-      isActive: true,
-      restaurantId: MOCK_RESTAURANT_ID,
-      isSuperAdmin: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  },
   kitchen1: {
     password: "Kitchen@123",
     profile: {
@@ -103,7 +88,7 @@ const MOCK_USERS: Record<string, { password: string; profile: UserProfile }> = {
       username: "super",
       email: "super@restaurant.local",
       displayName: "متعدد الأدوار",
-      roles: ["cashier", "takeaway", "admin"] as UserRole[],
+      roles: ["cashier", "admin"] as UserRole[],
       isActive: true,
       restaurantId: MOCK_RESTAURANT_ID,
       isSuperAdmin: false,

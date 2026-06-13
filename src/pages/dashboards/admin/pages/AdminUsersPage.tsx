@@ -34,7 +34,6 @@ const ROLES: { id: UserRole; label: string; color: string }[] = [
   { id: "kitchen",  label: "مطبخ",    color: "bg-orange-500/15 text-orange-600 border-orange-500/30" },
   { id: "field",    label: "ميداني",  color: "bg-green-500/15 text-green-600 border-green-500/30" },
   { id: "delivery", label: "سائق",    color: "bg-purple-500/15 text-purple-600 border-purple-500/30" },
-  { id: "takeaway", label: "تيك أواي", color: "bg-pink-500/15 text-pink-600 border-pink-500/30" },
 ];
 
 const ROLE_MAP = Object.fromEntries(ROLES.map(r => [r.id, r]));

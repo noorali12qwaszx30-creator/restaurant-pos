@@ -6,7 +6,6 @@ import { RoleSelectorPage } from "@/pages/role-selector/RoleSelectorPage";
 import { CashierDashboard } from "@/pages/dashboards/cashier/CashierDashboard";
 import { FieldDashboard } from "@/pages/dashboards/field/FieldDashboard";
 import { DeliveryDashboard } from "@/pages/dashboards/delivery/DeliveryDashboard";
-import { TakeawayDashboard } from "@/pages/dashboards/takeaway/TakeawayDashboard";
 import { KitchenDashboard } from "@/pages/dashboards/kitchen/KitchenDashboard";
 import { AdminDashboard } from "@/pages/dashboards/admin/AdminDashboard";
 import { SuperAdminDashboard } from "@/pages/dashboards/superadmin/SuperAdminDashboard";
@@ -39,9 +38,6 @@ export function AppRouter() {
       </Route>
       <Route element={<ProtectedRoute requiredRole="delivery" />}>
         <Route path="/dashboard/delivery/*" element={<DeliveryDashboard />} />
-      </Route>
-      <Route element={<ProtectedRoute requiredRole="takeaway" />}>
-        <Route path="/dashboard/takeaway/*" element={<TakeawayDashboard />} />
       </Route>
       <Route element={<ProtectedRoute requiredRole="kitchen" />}>
         <Route path="/dashboard/kitchen/*" element={<KitchenDashboard />} />

@@ -12,7 +12,6 @@ import {
   Settings,
   Search,
   History,
-  AlertCircle,
   ClipboardList,
   Users,
   Activity,
@@ -46,12 +45,6 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { to: "/dashboard/delivery/active",   label: "طلباتي",     icon: Bike },
     { to: "/dashboard/delivery/stats",    label: "إحصائياتي", icon: BarChart2 },
     { to: "/dashboard/delivery/archive",  label: "الأرشيف",   icon: Archive },
-  ],
-  takeaway: [
-    { to: "/dashboard/takeaway",           label: "القائمة",    icon: UtensilsCrossed },
-    { to: "/dashboard/takeaway/orders",    label: "الطلبات",    icon: Package         },
-    { to: "/dashboard/takeaway/completed", label: "المكتملة",   icon: Archive         },
-    { to: "/dashboard/takeaway/cancelled", label: "الملغية",    icon: AlertCircle     },
   ],
   kitchen: [
     { to: "/dashboard/kitchen", label: "الرئيسية", icon: LayoutDashboard },
