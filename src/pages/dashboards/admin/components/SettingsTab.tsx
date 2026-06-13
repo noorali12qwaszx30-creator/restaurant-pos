@@ -42,7 +42,7 @@ export function SettingsTab() {
       <div className="bg-surface border border-border rounded-2xl p-4 flex flex-col gap-3">
         <h3 className="text-sm font-semibold text-text-primary">معلومات المطعم</h3>
         {[
-          { label: "اسم المطعم", value: "Twitter Restaurant" },
+          { label: "اسم المطعم", value: "النظام للإدارة المتكاملة" },
           { label: "رقم التواصل", value: "0501234567" },
           { label: "العنوان", value: "الرياض، حي العليا" },
         ].map((f) => (

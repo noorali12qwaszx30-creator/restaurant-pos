@@ -115,10 +115,30 @@ const MOCK_USERS: Record<string, { password: string; profile: UserProfile }> = {
 
 const SESSION_KEY = "pos_dev_session";
 
+// ── أكواد الدخول الرقمية التجريبية (10 خانات) ──────────────────
+// تعمل بنفس واجهة الكود الرقمي تماماً كما في الإنتاج.
+const DEMO_CODES: Record<string, string> = {
+  "1000000001": "admin",
+  "1000000002": "cashier1",
+  "1000000003": "kitchen1",
+  "1000000004": "field1",
+  "1000000005": "delivery1",
+};
+
 export function mockSignIn(username: string, password: string): UserProfile {
   const entry = MOCK_USERS[username.toLowerCase()];
   if (!entry) throw new Error("auth/user-not-found");
   if (entry.password !== password) throw new Error("auth/wrong-password");
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(entry.profile));
+  return entry.profile;
+}
+
+/** دخول تجريبي بالكود الرقمي — نفس واجهة الإنتاج */
+export function mockSignInWithCode(code: string): UserProfile {
+  const username = DEMO_CODES[code.trim()];
+  if (!username) throw new Error("auth/invalid-code");
+  const entry = MOCK_USERS[username];
+  if (!entry) throw new Error("auth/user-not-found");
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(entry.profile));
   return entry.profile;
 }

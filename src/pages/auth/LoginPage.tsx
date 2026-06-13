@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Building2, Delete, Loader2, ChevronDown, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { loginWithCode } from "@/integrations/supabase/auth";
-import { IS_DEV_MODE, mockSignIn } from "@/lib/dev-mock";
+import { IS_DEV_MODE, mockSignInWithCode } from "@/lib/dev-mock";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROLE_ROUTES } from "@/types";
 import { cn } from "@/lib/utils";
@@ -112,8 +112,8 @@ export function LoginPage() {
     setError(null);
     try {
       if (IS_DEV_MODE) {
-        // وضع التطوير: استخدام اسم المستخدم كبديل للكود
-        const profile = mockSignIn(code, "Admin@123");
+        // وضع التطوير: دخول بالكود الرقمي (نفس واجهة الإنتاج)
+        const profile = mockSignInWithCode(code);
         setSuccess(true);
         setTimeout(() => {
           notifyLogin(profile, profile.roles[0]);
@@ -129,7 +129,12 @@ export function LoginPage() {
         navigate(ROLE_ROUTES[role], { replace: true });
       }, 700);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "فشل تسجيل الدخول");
+      const raw = err instanceof Error ? err.message : "";
+      const msg =
+        raw.includes("invalid-code") || raw.includes("user-not-found")
+          ? "الكود غير صحيح أو غير مسجّل في هذا المطعم"
+          : raw || "فشل تسجيل الدخول";
+      setError(msg);
       setCode("");
     } finally {
       setIsLoading(false);
@@ -295,7 +300,7 @@ export function LoginPage() {
         )}
 
         <p className="text-center text-xs text-text-muted">
-          تويتر © {new Date().getFullYear()}
+          النظام للإدارة المتكاملة © {new Date().getFullYear()}
         </p>
       </div>
 
