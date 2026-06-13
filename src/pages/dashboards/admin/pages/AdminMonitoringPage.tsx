@@ -201,7 +201,7 @@ export function AdminMonitoringPage() {
             { label: "انتظار",  val: activeOrders.filter(o => o.status === "pending").length,          color: "bg-status-warning/15 text-status-warning"  },
             { label: "تحضير",   val: activeOrders.filter(o => o.status === "preparing").length,        color: "bg-primary/15 text-primary"                 },
             { label: "جاهز",    val: activeOrders.filter(o => o.status === "ready").length,            color: "bg-status-success/15 text-status-success"  },
-            { label: "توصيل",   val: activeOrders.filter(o => o.status === "out_for_delivery").length, color: "bg-status-info/15 text-status-info"         },
+            { label: "توصيل",   val: activeOrders.filter(o => o.status === "delivering").length,       color: "bg-status-info/15 text-status-info"         },
           ].map(s => (
             <div key={s.label} className={cn("rounded-lg px-2 py-1.5 text-center", s.color)}>
               <p className="text-sm font-bold">{s.val}</p>

@@ -127,7 +127,7 @@ export function AdminOrdersPage() {
 
   const TYPE_OPTS: { id: string; label: string; Icon: React.ElementType }[] = [
     { id: "all",      label: "الكل",   Icon: Filter          },
-    { id: "dine_in",  label: "داخلي",  Icon: UtensilsCrossed },
+    { id: "pickup",   label: "استلام", Icon: UtensilsCrossed },
     { id: "takeaway", label: "سفري",   Icon: ShoppingBag     },
     { id: "delivery", label: "توصيل",  Icon: Truck           },
   ];

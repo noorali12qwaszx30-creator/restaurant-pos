@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 const ACTIVE_STATUSES = ["pending", "preparing", "ready", "delivering"] as const;
 
-type TypeFilter = "all" | "dine_in" | "takeaway" | "delivery";
+type TypeFilter = "all" | "pickup" | "takeaway" | "delivery";
 
 const STATUS_PIPELINE = [
   { status: "pending",    label: "انتظار",    color: "text-status-warning",  bg: "bg-status-warning/10"  },
@@ -58,7 +58,7 @@ export function ActiveOrdersTab() {
       <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
         {([
           { id: "all",      label: "الكل",   Icon: List           },
-          { id: "dine_in",  label: "داخلي",  Icon: UtensilsCrossed },
+          { id: "pickup",   label: "استلام", Icon: UtensilsCrossed },
           { id: "takeaway", label: "سفري",   Icon: ShoppingBag    },
           { id: "delivery", label: "توصيل",  Icon: Bike           },
         ] as { id: TypeFilter; label: string; Icon: React.ElementType }[]).map((t) => (

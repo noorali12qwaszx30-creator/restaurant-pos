@@ -20,8 +20,8 @@ import { useAuth } from "./AuthContext";
 export interface LiveOrder {
   id: string;
   orderNumber?: number;
-  type: "delivery" | "takeaway" | "dine_in" | "pickup";
-  status: "pending" | "preparing" | "ready" | "assigned" | "delivering" | "delivered" | "cancelled" | "out_for_delivery";
+  type: "delivery" | "takeaway" | "pickup";
+  status: "pending" | "preparing" | "ready" | "assigned" | "delivering" | "delivered" | "cancelled";
   source?: string;
   subtotal: number;
   deliveryFee: number;
@@ -57,10 +57,13 @@ export interface LiveOrder {
 }
 
 function mockToLive(o: MockOrder): LiveOrder {
-  let status = o.status as LiveOrder["status"];
-  if ((status as string) === "out_for_delivery") status = "delivering";
-  if ((status as string) === "paid")             status = "delivered";
-  if ((status as string) === "confirmed")        status = "preparing";
+  // تطبيع أي قيم قديمة محتملة إلى الحالات القانونية
+  const legacy: Record<string, LiveOrder["status"]> = {
+    out_for_delivery: "delivering",
+    paid: "delivered",
+    confirmed: "preparing",
+  };
+  const status = (legacy[o.status as string] ?? o.status) as LiveOrder["status"];
 
   return {
     id: o.id,

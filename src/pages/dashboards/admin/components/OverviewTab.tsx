@@ -45,10 +45,10 @@ export function OverviewTab() {
   const maxHourly = Math.max(...HOURLY_DATA.map((h) => h.revenue));
   const maxWeekly = Math.max(...WEEKLY_REVENUE.map((w) => w.revenue));
 
-  const dineIn   = orders.filter((o) => o.type === "dine_in").length;
+  const pickup   = orders.filter((o) => o.type === "pickup").length;
   const takeaway = orders.filter((o) => o.type === "takeaway").length;
   const delivery = orders.filter((o) => o.type === "delivery").length;
-  const total    = dineIn + takeaway + delivery;
+  const total    = pickup + takeaway + delivery;
 
   return (
     <div className="flex flex-col gap-5">
@@ -65,7 +65,7 @@ export function OverviewTab() {
         <h3 className="text-sm font-semibold text-text-primary mb-3">توزيع أنواع الطلبات</h3>
         <div className="flex gap-3 mb-3">
           {[
-            { label: "داخلي", value: dineIn, color: "bg-primary" },
+            { label: "استلام", value: pickup, color: "bg-primary" },
             { label: "تيك أواي", value: takeaway, color: "bg-status-info" },
             { label: "توصيل", value: delivery, color: "bg-status-warning" },
           ].map((t) => (
@@ -78,7 +78,7 @@ export function OverviewTab() {
         </div>
         {/* Stacked bar */}
         <div className="flex rounded-full overflow-hidden h-2 gap-0.5">
-          <div className="bg-primary rounded-full" style={{ width: `${(dineIn/total)*100}%` }} />
+          <div className="bg-primary rounded-full" style={{ width: `${(pickup/total)*100}%` }} />
           <div className="bg-status-info rounded-full" style={{ width: `${(takeaway/total)*100}%` }} />
           <div className="bg-status-warning rounded-full" style={{ width: `${(delivery/total)*100}%` }} />
         </div>

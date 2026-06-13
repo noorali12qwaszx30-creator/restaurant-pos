@@ -1,14 +1,13 @@
 export type OrderStatus =
   | "pending"
-  | "confirmed"
   | "preparing"
   | "ready"
-  | "out_for_delivery"
+  | "assigned"
+  | "delivering"
   | "delivered"
-  | "paid"
   | "cancelled";
 
-export type OrderType = "dine_in" | "takeaway" | "delivery";
+export type OrderType = "delivery" | "takeaway" | "pickup";
 export type TableStatus = "available" | "occupied" | "reserved" | "cleaning";
 export type PaymentMethod = "cash" | "card" | "split";
 export type UserRole = "cashier" | "field" | "delivery" | "kitchen" | "admin" | "super_admin";

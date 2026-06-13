@@ -6,7 +6,7 @@ const ago = (m: number) => new Date(now.getTime() - m * 60000);
 export const MOCK_ORDERS: Order[] = [
   {
     id: "ORD-001",
-    type: "dine_in",
+    type: "pickup",
     status: "preparing",
     tableNumber: 5,
     items: [
@@ -33,7 +33,7 @@ export const MOCK_ORDERS: Order[] = [
   {
     id: "ORD-003",
     type: "delivery",
-    status: "out_for_delivery",
+    status: "delivering",
     customerName: "سارة عبدالله",
     customerPhone: "0557654321",
     deliveryAddress: "حي النزهة، شارع الملك فهد، عمارة 12، شقة 3",
@@ -48,7 +48,7 @@ export const MOCK_ORDERS: Order[] = [
   },
   {
     id: "ORD-004",
-    type: "dine_in",
+    type: "pickup",
     status: "pending",
     tableNumber: 8,
     items: [
@@ -63,7 +63,7 @@ export const MOCK_ORDERS: Order[] = [
   {
     id: "ORD-005",
     type: "delivery",
-    status: "confirmed",
+    status: "preparing",
     customerName: "محمد الغامدي",
     customerPhone: "0561111222",
     deliveryAddress: "حي الروضة، طريق الأمير سلطان، فيلا 45",
@@ -77,8 +77,8 @@ export const MOCK_ORDERS: Order[] = [
   },
   {
     id: "ORD-006",
-    type: "dine_in",
-    status: "paid",
+    type: "pickup",
+    status: "delivered",
     tableNumber: 3,
     items: [
       { menuItemId: "m13", name: "مندي دجاج", quantity: 2, unitPrice: 60 },
@@ -104,8 +104,8 @@ export const MOCK_ORDERS: Order[] = [
   },
   {
     id: "ORD-008",
-    type: "dine_in",
-    status: "confirmed",
+    type: "pickup",
+    status: "preparing",
     tableNumber: 12,
     items: [
       { menuItemId: "m24", name: "سمك مشوي", quantity: 2, unitPrice: 90 },
@@ -132,7 +132,7 @@ export const MOCK_ORDERS: Order[] = [
   {
     id: "ORD-010",
     type: "takeaway",
-    status: "paid",
+    status: "delivered",
     customerName: "نوف القحطاني",
     customerPhone: "0502223333",
     items: [
@@ -184,7 +184,7 @@ export const MOCK_ORDERS: Order[] = [
   {
     id: "ORD-D03",
     type: "delivery",
-    status: "out_for_delivery",
+    status: "delivering",
     customerName: "فيصل الدوسري",
     customerPhone: "0534567890",
     deliveryAddress: "حي النزهة، شارع الملك فهد، عمارة 5، شقة 12",
@@ -202,7 +202,7 @@ export const MOCK_ORDERS: Order[] = [
   {
     id: "ORD-D04",
     type: "delivery",
-    status: "out_for_delivery",
+    status: "delivering",
     customerName: "ليلى الشمري",
     customerPhone: "0545678901",
     deliveryAddress: "حي الروضة، طريق الملك عبدالعزيز، برج A",
@@ -332,7 +332,7 @@ export const MOCK_ORDERS: Order[] = [
   {
     id: "ORD-014",
     type: "delivery",
-    status: "out_for_delivery",
+    status: "delivering",
     customerName: "ريم العتيبي",
     customerPhone: "0544556677",
     deliveryAddress: "حي العليا، برج المملكة، شقة 501",
@@ -369,7 +369,7 @@ export const MOCK_ORDERS: Order[] = [
   {
     id: "ORD-016",
     type: "delivery",
-    status: "out_for_delivery",
+    status: "delivering",
     customerName: "هند الزهراني",
     customerPhone: "0566778899",
     deliveryAddress: "حي الروضة، شارع التخصصي، عمارة 5، شقة 8",
@@ -387,7 +387,7 @@ export const MOCK_ORDERS: Order[] = [
 
   // ── طلبات مطبخ إضافية للعرض ──
   {
-    id: "ORD-K01", type: "dine_in", status: "pending",
+    id: "ORD-K01", type: "pickup", status: "pending",
     tableNumber: 2,
     items: [
       { menuItemId: "m19", name: "مشاوي مشكلة", quantity: 2, unitPrice: 85 },
@@ -408,7 +408,7 @@ export const MOCK_ORDERS: Order[] = [
     createdAt: ago(28), updatedAt: ago(15),
   },
   {
-    id: "ORD-K03", type: "delivery", status: "confirmed",
+    id: "ORD-K03", type: "delivery", status: "preparing",
     customerName: "ريم الشهري",
     customerPhone: "0501122334",
     deliveryAddress: "حي الياسمين، شارع 15",
@@ -422,7 +422,7 @@ export const MOCK_ORDERS: Order[] = [
     notes: "توابل خفيفة",
   },
   {
-    id: "ORD-K04", type: "dine_in", status: "preparing",
+    id: "ORD-K04", type: "pickup", status: "preparing",
     tableNumber: 7,
     items: [
       { menuItemId: "m22", name: "شيش طاووق", quantity: 3, unitPrice: 55 },
@@ -457,7 +457,7 @@ export const MOCK_ORDERS: Order[] = [
     createdAt: ago(2), updatedAt: ago(2),
   },
   {
-    id: "ORD-K07", type: "dine_in", status: "confirmed",
+    id: "ORD-K07", type: "pickup", status: "preparing",
     tableNumber: 11,
     items: [
       { menuItemId: "m14", name: "مندي لحم", quantity: 1, unitPrice: 80 },
@@ -480,7 +480,7 @@ export const MOCK_ORDERS: Order[] = [
     notes: "بدون ثوم",
   },
   {
-    id: "ORD-K09", type: "dine_in", status: "pending",
+    id: "ORD-K09", type: "pickup", status: "pending",
     tableNumber: 4,
     items: [
       { menuItemId: "m20", name: "كباب دجاج", quantity: 2, unitPrice: 55 },
@@ -512,7 +512,7 @@ export const getOrdersByType = (type: Order["type"]) =>
   MOCK_ORDERS.filter((o) => o.type === type);
 
 export const getActiveOrders = () =>
-  MOCK_ORDERS.filter((o) => !["paid", "cancelled", "delivered"].includes(o.status));
+  MOCK_ORDERS.filter((o) => !["cancelled", "delivered"].includes(o.status));
 
 export const getDeliveryOrders = () =>
   MOCK_ORDERS.filter((o) => o.type === "delivery");
@@ -520,8 +520,8 @@ export const getDeliveryOrders = () =>
 export const getTakeawayOrders = () =>
   MOCK_ORDERS.filter((o) => o.type === "takeaway");
 
-export const getDineInOrders = () =>
-  MOCK_ORDERS.filter((o) => o.type === "dine_in");
+export const getPickupOrders = () =>
+  MOCK_ORDERS.filter((o) => o.type === "pickup");
 
 export const getKitchenOrders = () =>
-  MOCK_ORDERS.filter((o) => ["confirmed", "preparing"].includes(o.status));
+  MOCK_ORDERS.filter((o) => ["pending", "preparing"].includes(o.status));

@@ -26,7 +26,7 @@ const STATUS_FILTERS: { id: StatusFilter; label: string }[] = [
 
 const TYPE_FILTERS: { id: TypeFilter; label: string; Icon: React.ElementType }[] = [
   { id: "all",      label: "كل الأنواع", Icon: List            },
-  { id: "dine_in",  label: "داخلي",      Icon: UtensilsCrossed },
+  { id: "pickup",   label: "استلام",      Icon: UtensilsCrossed },
   { id: "takeaway", label: "سفري",        Icon: ShoppingBag    },
   { id: "delivery", label: "توصيل",       Icon: Bike           },
 ];

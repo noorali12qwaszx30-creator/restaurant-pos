@@ -1,4 +1,4 @@
-import { UtensilsCrossed, ShoppingBag, Bike, Store } from "lucide-react";
+import { ShoppingBag, Bike, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type AnyStatus = string;
@@ -11,13 +11,11 @@ const STATUS_MAP: Record<string, {
   border: string;
 }> = {
   pending:          { label: "انتظار",      dot: "bg-status-warning",  bg: "bg-status-warning/12",  text: "text-status-warning",  border: "border-status-warning/25"  },
-  confirmed:        { label: "مؤكد",        dot: "bg-status-info",     bg: "bg-status-info/12",     text: "text-status-info",     border: "border-status-info/25"     },
   preparing:        { label: "قيد التحضير", dot: "bg-primary",         bg: "bg-primary/10",         text: "text-primary",         border: "border-primary/25"         },
   ready:            { label: "جاهز",        dot: "bg-status-success",  bg: "bg-status-success/12",  text: "text-status-success",  border: "border-status-success/25"  },
-  out_for_delivery: { label: "في الطريق",   dot: "bg-status-info",     bg: "bg-status-info/12",     text: "text-status-info",     border: "border-status-info/25"     },
+  assigned:         { label: "مُسند",       dot: "bg-status-info",     bg: "bg-status-info/12",     text: "text-status-info",     border: "border-status-info/25"     },
   delivering:       { label: "في الطريق",   dot: "bg-status-info",     bg: "bg-status-info/12",     text: "text-status-info",     border: "border-status-info/25"     },
   delivered:        { label: "تم التوصيل",  dot: "bg-status-success",  bg: "bg-status-success/10",  text: "text-status-success",  border: "border-status-success/20"  },
-  paid:             { label: "مدفوع",       dot: "bg-text-muted",      bg: "bg-surface-elevated",   text: "text-text-secondary",  border: "border-border"             },
   cancelled:        { label: "ملغي",        dot: "bg-status-error",    bg: "bg-status-error/10",    text: "text-status-error",    border: "border-status-error/20"    },
 };
 
@@ -39,7 +37,6 @@ export function StatusBadge({ status }: { status: AnyStatus }) {
 }
 
 const TYPE_MAP: Record<string, { label: string; Icon: React.ElementType; cls: string }> = {
-  dine_in:  { label: "داخلي",  Icon: UtensilsCrossed, cls: "text-primary bg-primary/8 border-primary/20"           },
   takeaway: { label: "سفري",   Icon: ShoppingBag,     cls: "text-amber-600 bg-amber-500/8 border-amber-500/20"     },
   delivery: { label: "توصيل",  Icon: Bike,            cls: "text-status-info bg-status-info/8 border-status-info/20" },
   pickup:   { label: "استلام", Icon: Store,           cls: "text-text-secondary bg-surface-elevated border-border"  },

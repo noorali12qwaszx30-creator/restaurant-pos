@@ -13,7 +13,7 @@ import { StatusBadge } from "@/components/dashboard/StatusBadge";
 
 const FILTERS = [
   { value: "all",      label: "الكل" },
-  { value: "dine_in",  label: "داخلي" },
+  { value: "pickup",   label: "استلام" },
   { value: "takeaway", label: "سفري" },
   { value: "delivery", label: "توصيل" },
 ];

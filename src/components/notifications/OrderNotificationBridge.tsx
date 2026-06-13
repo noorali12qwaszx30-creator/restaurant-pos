@@ -9,7 +9,6 @@ import { useNotify } from "./NotificationContext";
 const TYPE_LABELS: Record<LiveOrder["type"], string> = {
   delivery:  "توصيل",
   takeaway:  "سفري",
-  dine_in:   "داخل المطعم",
   pickup:    "استلام",
 };
 
@@ -68,7 +67,6 @@ export function OrderNotificationBridge() {
             notify({ type: "ready",    title: `جاهز للاستلام ${num}`.trim(),    message: `${typeLabel} · الطلب جاهز الآن`,       duration: 5000 });
             break;
           case "delivering":
-          case "out_for_delivery":
             notify({ type: "delivery", title: `خرج للتوصيل ${num}`.trim(),      message: `${typeLabel} · السائق في الطريق`,     duration: 4000 });
             break;
           case "delivered":

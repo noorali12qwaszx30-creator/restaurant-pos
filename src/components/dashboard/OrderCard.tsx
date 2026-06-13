@@ -74,11 +74,10 @@ export function timeAgo(date: Date): string {
 
 const STATUS_BORDER: Record<string, string> = {
   pending:          "border-r-status-warning",
-  confirmed:        "border-r-status-info",
   preparing:        "border-r-primary",
   ready:            "border-r-status-success",
+  assigned:         "border-r-status-info",
   delivering:       "border-r-status-info",
-  out_for_delivery: "border-r-status-info",
   delivered:        "border-r-status-success/40",
   cancelled:        "border-r-status-error/40",
 };

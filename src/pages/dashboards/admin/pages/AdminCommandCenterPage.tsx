@@ -191,7 +191,7 @@ export function AdminCommandCenterPage() {
     const topItems = Object.values(itemMap).sort((a, b) => b.qty - a.qty).slice(0, 5);
 
     // Order types
-    const types = { delivery: 0, takeaway: 0, dine_in: 0 } as Record<string, number>;
+    const types = { delivery: 0, takeaway: 0, pickup: 0 } as Record<string, number>;
     todayOrders.forEach(o => { if (o.type in types) types[o.type]++; });
 
     // Staff activity
@@ -473,7 +473,7 @@ function PerformanceTab({ M, loading }: { M: any; loading: boolean }) {
           {[
             { key: "delivery", label: "توصيل",   colorBar: "bg-sky-400",     icon: Truck       },
             { key: "takeaway", label: "تيك أواي", colorBar: "bg-primary",     icon: ShoppingBag },
-            { key: "dine_in",  label: "داخلي",    colorBar: "bg-emerald-400", icon: ChefHat     },
+            { key: "pickup",   label: "استلام",   colorBar: "bg-emerald-400", icon: ChefHat     },
           ].map(t => {
             const count = M.types[t.key] ?? 0;
             const pct   = M.total > 0 ? Math.round(count / M.total * 100) : 0;

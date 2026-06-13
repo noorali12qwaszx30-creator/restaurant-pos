@@ -74,7 +74,7 @@ function useStats(period: "day" | "week" | "month", allOrders: LiveOrder[], menu
     const cancelled = orders.filter(o => o.status === "cancelled");
 
     // By type
-    const dineIn   = orders.filter(o => o.type === "dine_in");
+    const pickup   = orders.filter(o => o.type === "pickup");
     const takeaway = orders.filter(o => o.type === "takeaway");
     const delivery = orders.filter(o => o.type === "delivery");
 
@@ -155,7 +155,7 @@ function useStats(period: "day" | "week" | "month", allOrders: LiveOrder[], menu
 
     return {
       orders, delivered, cancelled, revenue, deliveryFees,
-      dineIn, takeaway, delivery,
+      pickup, takeaway, delivery,
       topByQty, topByRev, zeroSales, catStats,
       dailyData, hourMap, peakHour,
       zoneStats, topCustomers, repeatCustomers, totalCustomers,
@@ -293,7 +293,7 @@ export function AdminStatsPage() {
         <p className="text-xs font-bold text-text-secondary mt-4 mb-2">توزيع نوع الطلب</p>
         <div className="grid grid-cols-3 gap-2">
           {[
-            { label: "داخلي",  count: s.dineIn.length,   Icon: UtensilsCrossed, color: "bg-primary/10 border-primary/25 text-primary" },
+            { label: "استلام",  count: s.pickup.length,   Icon: UtensilsCrossed, color: "bg-primary/10 border-primary/25 text-primary" },
             { label: "سفري",   count: s.takeaway.length, Icon: ShoppingBag,     color: "bg-status-info/10 border-status-info/25 text-status-info" },
             { label: "توصيل",  count: s.delivery.length, Icon: Truck,           color: "bg-status-success/10 border-status-success/25 text-status-success" },
           ].map(t => (
@@ -381,7 +381,7 @@ export function AdminStatsPage() {
       <Section title="تحليل سلوك الطلب" icon={Star}>
         <div className="grid grid-cols-2 gap-2">
           <KpiMini label="أكثر طريقة طلب" value={
-            s.dineIn.length >= s.takeaway.length && s.dineIn.length >= s.delivery.length ? "داخلي" :
+            s.pickup.length >= s.takeaway.length && s.pickup.length >= s.delivery.length ? "استلام" :
             s.takeaway.length >= s.delivery.length ? "سفري" : "توصيل"
           } />
           <KpiMini label="معدل الإلغاء" value={`${pct(s.cancelled.length, s.orders.length)}%`}
