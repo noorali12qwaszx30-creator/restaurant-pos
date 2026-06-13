@@ -7,6 +7,7 @@ import {
 import { useOrders } from "@/contexts/OrderContext";
 import { MOCK_STAFF }  from "@/data/mock-users";
 import { TODAY_STATS, HOURLY_DATA } from "@/data/mock-stats";
+import { netRevenue } from "@/lib/revenue";
 import { cn } from "@/lib/utils";
 
 /* ─── types ─────────────────────────────────────────────────── */
@@ -252,9 +253,8 @@ export function AdminHomePage() {
     const delivering = orders.filter(o => o.status === "delivering").length;
     const delivered  = orders.filter(o => o.status === "delivered").length;
     const cancelled  = orders.filter(o => o.status === "cancelled").length;
-    const revenue    = orders
-      .filter(o => o.status === "delivered")
-      .reduce((s, o) => s + o.total, TODAY_STATS.totalRevenue.value - 300);
+    // إيراد المطعم = Σ(total − delivery_fee) للمسلّمة فقط (مصدر موحّد)
+    const revenue    = netRevenue(orders);
     const connected  = MOCK_STAFF.filter(u => u.isActive && u.lastLogin &&
       (Date.now() - u.lastLogin.getTime()) < 3600000).length;
 

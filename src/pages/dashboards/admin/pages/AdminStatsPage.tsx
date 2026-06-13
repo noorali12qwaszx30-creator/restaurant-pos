@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useOrders, type LiveOrder } from "@/contexts/OrderContext";
 import { useMenuData, type MenuItemData, type MenuCategory } from "@/hooks/useMenuData";
+import { netRevenue, deliveryFeesTotal } from "@/lib/revenue";
 import { cn } from "@/lib/utils";
 
 /* ─── helpers ────────────────────────────────────────────────── */
@@ -68,9 +69,9 @@ function useStats(period: "day" | "week" | "month", allOrders: LiveOrder[], menu
     const orders = allOrders.filter(o => o.createdAt.getTime() >= cutoff);
     const delivered = orders.filter(o => o.status === "delivered");
 
-    // Revenue (delivered/paid only, no delivery fees)
-    const revenue = delivered.reduce((s, o) => s + o.items.reduce((ss, i) => ss + i.unitPrice * i.quantity, 0), 0);
-    const deliveryFees = delivered.filter(o => o.type === "delivery").reduce((s, o) => s + (o.deliveryFee ?? 0), 0);
+    // إيراد المطعم = Σ(total − delivery_fee) للمسلّمة (مصدر موحّد)
+    const revenue = netRevenue(orders);
+    const deliveryFees = deliveryFeesTotal(orders);
     const cancelled = orders.filter(o => o.status === "cancelled");
 
     // By type

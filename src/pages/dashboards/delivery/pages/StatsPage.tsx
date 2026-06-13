@@ -73,14 +73,20 @@ export function StatsPage() {
 
   const [period, setPeriod] = useState<Period>("today");
 
-  const todayCount   = delivered.length;
-  const weekCount    = delivered.length + 27;
-  const monthCount   = delivered.length + 85;
-  const count = period === "today" ? todayCount : period === "week" ? weekCount : monthCount;
-
-  const totalFees = delivered.reduce((s, o) => s + o.deliveryFee, 0);
-  const weekFees  = WEEK_DATA.reduce((s, d) => s + d.fees, 0);
-  const fees = period === "today" ? totalFees : period === "week" ? weekFees : weekFees * 4.3;
+  // اشتقاق حقيقي من الطلبات المسلّمة حسب المدة — لا أرقام تجريبية ثابتة
+  const now = Date.now();
+  const RANGES: Record<Period, number> = {
+    today: 24 * 3600_000,
+    week:  7 * 24 * 3600_000,
+    month: 30 * 24 * 3600_000,
+  };
+  const inPeriod = useMemo(
+    () => delivered.filter(o => now - (o.deliveredAt ?? o.createdAt).getTime() <= RANGES[period]),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [delivered, period]
+  );
+  const count = inPeriod.length;
+  const fees  = inPeriod.reduce((s, o) => s + o.deliveryFee, 0);
 
   const completionRate = myOrders.length ? Math.round((delivered.length / myOrders.length) * 100) : 0;
   const avgDeliveryMin = 24;
