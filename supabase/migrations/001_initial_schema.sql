@@ -13,8 +13,7 @@ CREATE TYPE order_status AS ENUM (
   'pending',        -- cashier created
   'preparing',      -- kitchen started
   'ready',          -- field approved
-  'assigned',       -- driver assigned, awaiting driver acceptance
-  'delivering',     -- driver accepted & on the way
+  'delivering',     -- driver assigned & on the way
   'delivered',      -- driver confirmed delivery
   'cancelled'       -- cancelled with reason
 );

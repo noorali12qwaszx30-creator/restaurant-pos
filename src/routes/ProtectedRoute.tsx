@@ -15,12 +15,12 @@ export function ProtectedRoute({ requiredRole }: ProtectedRouteProps) {
       <div className="min-h-dvh bg-background flex items-center justify-center p-6">
         <div className="max-w-sm w-full bg-surface border border-status-error/30 rounded-2xl p-6 text-center">
           <Settings2 className="w-8 h-8 text-text-muted mx-auto mb-3" />
-          <h2 className="text-lg font-bold text-text-primary mb-2">Firebase غير مُعدَّد</h2>
+          <h2 className="text-lg font-bold text-text-primary mb-2">Supabase غير مُعدَّد</h2>
           <p className="text-sm text-text-secondary mb-4">
             انسخ{" "}
             <code className="bg-surface-elevated px-1 rounded">.env.example</code> إلى{" "}
             <code className="bg-surface-elevated px-1 rounded">.env</code>{" "}
-            وأضف بيانات مشروع Firebase.
+            وأضف بيانات مشروع Supabase.
           </p>
           <pre className="text-xs text-status-error bg-surface-elevated rounded-lg p-3 text-start overflow-auto">
             {configError}

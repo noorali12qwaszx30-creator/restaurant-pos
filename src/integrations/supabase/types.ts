@@ -1,9 +1,9 @@
 // Auto-generated type stubs — replace with `supabase gen types typescript` output
 // after running migrations against your project.
 
-export type UserRole = "cashier" | "kitchen" | "field" | "delivery" | "admin" | "takeaway" | "super_admin";
-export type OrderStatus = "pending" | "preparing" | "ready" | "delivering" | "delivered" | "cancelled";
-export type OrderType = "delivery" | "takeaway" | "pickup" | "dine_in";
+export type UserRole = "cashier" | "kitchen" | "field" | "delivery" | "admin" | "super_admin";
+export type OrderStatus = "pending" | "preparing" | "ready" | "assigned" | "delivering" | "delivered" | "cancelled";
+export type OrderType = "delivery" | "takeaway" | "pickup";
 export type OrderSource = "local" | "phone" | "instagram" | "whatsapp" | "telegram";
 export type PaymentMethod = "cash" | "card" | "split";
 
