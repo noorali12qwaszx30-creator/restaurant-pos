@@ -39,6 +39,10 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_DEV_MODE: ${{ secrets.VITE_DEV_MODE }}
+          # Sentry — يرفع source maps المطابقة لحزمة الإنتاج (debug ids)
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: 8d01347cfe62
+          SENTRY_PROJECT: aman
         run: npm run build
 
       - name: Setup Pages
