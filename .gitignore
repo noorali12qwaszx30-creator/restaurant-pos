@@ -20,6 +20,10 @@ dist-ssr/
 .env.test.local
 .env.production.local
 
+# Sentry — secret auth token for source map upload (never commit)
+.env.sentry-build-plugin
+.sentryclirc
+
 # Editor
 .vscode/*
 !.vscode/extensions.json
