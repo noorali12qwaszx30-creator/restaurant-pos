@@ -5,6 +5,19 @@
 import { supabase } from "./client";
 import type { Order, OrderItem } from "./types";
 
+/**
+ * يزيل أي قناة قديمة بنفس الاسم قبل إنشاء قناة جديدة، لتفادي خطأ
+ * "cannot add postgres_changes callbacks ... after subscribe()" الذي يحدث
+ * عند بقاء قناة سابقة مشتركة دون إزالة (سباق إعادة التركيب / StrictMode).
+ */
+function removeStaleChannel(name: string): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const existing = (supabase as any)
+    .getChannels?.()
+    .find((c: { topic: string }) => c.topic === `realtime:${name}`);
+  if (existing) supabase.removeChannel(existing);
+}
+
 // ══════════════════════════════════════════════════════════════
 // ORDERS — subscribe to all changes
 // ══════════════════════════════════════════════════════════════
@@ -24,6 +37,8 @@ export function subscribeToOrders(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const filterConfig: any = { event: "*", schema: "public", table: "orders" };
   if (restaurantId) filterConfig.filter = `restaurant_id=eq.${restaurantId}`;
+
+  removeStaleChannel(channelName);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channel = (supabase as any)
@@ -61,6 +76,8 @@ export function subscribeToKitchenOrders(
   const filterConfig: any = { event: "*", schema: "public", table: "orders" };
   if (restaurantId) filterConfig.filter = `restaurant_id=eq.${restaurantId}`;
 
+  removeStaleChannel(channelName);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channel = (supabase as any)
     .channel(channelName)
@@ -96,6 +113,8 @@ export function subscribeToFieldOrders(
   const filterConfig: any = { event: "*", schema: "public", table: "orders" };
   if (restaurantId) filterConfig.filter = `restaurant_id=eq.${restaurantId}`;
 
+  removeStaleChannel(channelName);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channel = (supabase as any)
     .channel(channelName)
@@ -123,6 +142,8 @@ export function subscribeToDriverOrders(
     onUpdate?: (order: Order) => void;
   }
 ): () => void {
+  removeStaleChannel(`driver-${driverId}`);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channel = (supabase as any)
     .channel(`driver-${driverId}`)
@@ -147,6 +168,8 @@ export function subscribeToOrderItems(
   orderId: string,
   callback: (item: OrderItem) => void
 ): () => void {
+  removeStaleChannel(`order-items-${orderId}`);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channel = (supabase as any)
     .channel(`order-items-${orderId}`)

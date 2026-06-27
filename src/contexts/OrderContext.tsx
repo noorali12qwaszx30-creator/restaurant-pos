@@ -159,7 +159,9 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (IS_DEV_MODE) return;
     let unsub: (() => void) | undefined;
+    let cancelled = false;
     import("@/integrations/supabase/realtime").then(({ subscribeToOrders }) => {
+      if (cancelled) return; // الـ effect نُظّف قبل اكتمال الاستيراد — لا تشترك
       unsub = subscribeToOrders(restaurantId, {
         onInsert: async (o) => {
           try {
@@ -197,7 +199,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         },
       });
     });
-    return () => unsub?.();
+    return () => { cancelled = true; unsub?.(); };
   }, [restaurantId]);
 
   // ── Mutations ──────────────────────────────────────────────
